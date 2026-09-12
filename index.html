@@ -28,8 +28,12 @@
         <div class="hud-title-card">
             <span class="game-title">🕉️ Ganesh Pandal Craft 3D</span>
             <span class="blessings-badge">🙏 Blessings: <span id="blessings-count">0</span></span>
+            <span id="mp-status-badge" class="mp-badge" style="display: none;"></span>
         </div>
         <div class="hud-actions">
+            <button id="btn-multiplayer" class="hud-btn hud-btn-multiplayer" title="Play with friends using a room code (M)">
+                👥 Friends (M)
+            </button>
             <button id="btn-build-pandal" class="hud-btn hud-btn-primary" title="Instantly erect a grand festive tent">
                 ⛺ Pandal (T)
             </button>
@@ -63,6 +67,7 @@
         <div id="touch-actions">
             <div class="touch-action-row">
                 <button id="btn-touch-palette" class="touch-btn" title="Blocks Palette">🎒 Blocks</button>
+                <button id="btn-touch-multiplayer" class="touch-btn touch-btn-multiplayer" title="Play with Friends">👥 Friends</button>
                 <button id="btn-touch-aarti" class="touch-btn touch-btn-aarti" title="Perform Aarti">🪔 Aarti</button>
             </div>
             <div class="touch-action-row">
@@ -144,16 +149,60 @@
         </div>
     </div>
 
+    <!-- Multiplayer Room Code Modal -->
+    <div id="multiplayer-modal" class="modal-overlay" style="display: none;">
+        <div class="mp-card">
+            <div class="mp-header">
+                <h2>👥 MULTIPLAYER ROOMS</h2>
+                <button id="btn-close-multiplayer" class="modal-close-btn" title="Close Modal">✕</button>
+            </div>
+            <p class="mp-sub">Play with your friend in the same 3D Ganesh world using a simple room code!</p>
+
+            <div class="mp-sections">
+                <!-- Section 1: Host Room -->
+                <div class="mp-section">
+                    <h3>👑 Host a Game</h3>
+                    <p class="mp-section-desc">Create a room code and share it with your friend.</p>
+                    <button id="btn-mp-host" class="mp-btn mp-btn-primary">🎮 Create Room Code</button>
+                    
+                    <div id="mp-host-waiting" style="display: none;" class="mp-box">
+                        <div class="mp-code-label">YOUR ROOM CODE</div>
+                        <div class="mp-code-row">
+                            <span id="mp-host-code" class="mp-code-text">-----</span>
+                            <button id="btn-copy-code" class="mp-copy-btn" title="Copy Room Code">📋 Copy Code</button>
+                        </div>
+                        <div class="mp-link-row">
+                            <input id="mp-share-link" type="text" readonly value="" placeholder="Generating direct link..." />
+                            <button id="btn-copy-link" class="mp-copy-btn" title="Copy Direct Invite Link">🔗 Copy Link</button>
+                        </div>
+                        <p class="mp-pulse-text">📡 Tell your friend to join using this code!</p>
+                    </div>
+                </div>
+
+                <!-- Section 2: Join Room -->
+                <div class="mp-section">
+                    <h3>🚀 Join a Friend</h3>
+                    <p class="mp-section-desc">Enter the room code given by your friend.</p>
+                    <div class="mp-join-row">
+                        <input id="mp-join-input" type="text" maxlength="8" placeholder="e.g. 7K9X2" autocomplete="off" spellcheck="false" />
+                        <button id="btn-mp-join" class="mp-btn mp-btn-secondary">Join Game</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div id="game-toast"></div>
 
-    <!-- Engine Scripts (Zero-dependency local bundle with cache bust) -->
-    <script src="js/three.min.js?v=5.0"></script>
-    <script src="js/audio.js?v=5.0"></script>
-    <script src="js/ganesha.js?v=5.0"></script>
-    <script src="js/npc.js?v=5.0"></script>
-    <script src="js/voxel.js?v=5.0"></script>
-    <script src="js/player.js?v=5.0"></script>
-    <script src="js/game.js?v=5.0"></script>
+    <!-- Engine Scripts -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="js/three.min.js?v=6.0"></script>
+    <script src="js/audio.js?v=6.0"></script>
+    <script src="js/ganesha.js?v=6.0"></script>
+    <script src="js/voxel.js?v=6.0"></script>
+    <script src="js/multiplayer.js?v=6.0"></script>
+    <script src="js/player.js?v=6.0"></script>
+    <script src="js/game.js?v=6.0"></script>
 </body>
 </html>

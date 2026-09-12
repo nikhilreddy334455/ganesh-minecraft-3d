@@ -54,6 +54,7 @@ class GaneshMinecraftGame {
         this.initLighting();
         this.initWorld();
         this.initPlayer();
+        this.multiplayer = new MultiplayerManager(this);
         this.initUI();
         this.initEvents();
 
@@ -141,8 +142,6 @@ class GaneshMinecraftGame {
     initWorld() {
         this.voxelWorld = new VoxelWorld(this.scene);
         this.voxelWorld.generateTerrain(72);
-        this.npcManager = new NPCManager(this.scene);
-        this.npcManager.spawnDevotees(14);
     }
 
     initPlayer() {
@@ -152,6 +151,7 @@ class GaneshMinecraftGame {
     initUI() {
         this.renderHotbar();
         this.setupPaletteModal();
+        this.setupMultiplayerModal();
 
         // Pandal Quick-Build Button
         const btnBuildPandal = document.getElementById('btn-build-pandal');
@@ -290,6 +290,110 @@ class GaneshMinecraftGame {
         }
     }
 
+    setupMultiplayerModal() {
+        const modal = document.getElementById('multiplayer-modal');
+        const btnOpen = document.getElementById('btn-multiplayer');
+        const btnTouchOpen = document.getElementById('btn-touch-multiplayer');
+        const btnClose = document.getElementById('btn-close-multiplayer');
+
+        const btnHost = document.getElementById('btn-mp-host');
+        const btnJoin = document.getElementById('btn-mp-join');
+        const joinInput = document.getElementById('mp-join-input');
+        const btnCopyCode = document.getElementById('btn-copy-code');
+        const btnCopyLink = document.getElementById('btn-copy-link');
+
+        if (!modal) return;
+
+        if (btnOpen) btnOpen.addEventListener('click', (e) => { e.stopPropagation(); this.toggleMultiplayerModal(); });
+        if (btnTouchOpen) btnTouchOpen.addEventListener('click', (e) => { e.stopPropagation(); this.toggleMultiplayerModal(); });
+        if (btnClose) btnClose.addEventListener('click', (e) => { e.stopPropagation(); this.toggleMultiplayerModal(false); });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) this.toggleMultiplayerModal(false);
+        });
+
+        // Host button
+        if (btnHost) {
+            btnHost.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.multiplayer.hostRoom((code) => {
+                    this.showToast(`👑 Room Created! Code: ${code}. Share it with your friend!`, 4000);
+                });
+            });
+        }
+
+        // Join button
+        if (btnJoin && joinInput) {
+            btnJoin.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const code = joinInput.value.trim();
+                if (!code) {
+                    this.showToast('Please enter a room code!', 3000);
+                    return;
+                }
+                this.multiplayer.joinRoom(code);
+                this.toggleMultiplayerModal(false);
+            });
+            joinInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    btnJoin.click();
+                }
+            });
+        }
+
+        // Copy Code button
+        if (btnCopyCode) {
+            btnCopyCode.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.multiplayer.roomCode) {
+                    navigator.clipboard.writeText(this.multiplayer.roomCode).then(() => {
+                        this.showToast('📋 Room Code copied to clipboard!', 2500);
+                    }).catch(() => {
+                        this.showToast(`Code: ${this.multiplayer.roomCode}`, 3000);
+                    });
+                }
+            });
+        }
+
+        // Copy Link button
+        if (btnCopyLink) {
+            btnCopyLink.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const linkInput = document.getElementById('mp-share-link');
+                if (linkInput && linkInput.value) {
+                    navigator.clipboard.writeText(linkInput.value).then(() => {
+                        this.showToast('🔗 Direct Invite Link copied to clipboard!', 2500);
+                    }).catch(() => {
+                        this.showToast('Copied link!', 2000);
+                    });
+                }
+            });
+        }
+
+        // Check if there was an auto-join room code in URL parameter
+        if (this.multiplayer && this.multiplayer.pendingRoomCode) {
+            setTimeout(() => {
+                this.showToast(`Auto-joining room: ${this.multiplayer.pendingRoomCode}...`, 3000);
+                this.multiplayer.joinRoom(this.multiplayer.pendingRoomCode);
+            }, 1000);
+        }
+    }
+
+    toggleMultiplayerModal(forceOpen = null) {
+        const modal = document.getElementById('multiplayer-modal');
+        if (!modal) return;
+        const isClosed = (modal.style.display === 'none' || !modal.style.display);
+        const shouldOpen = (forceOpen !== null) ? forceOpen : isClosed;
+        if (shouldOpen) {
+            modal.style.display = 'flex';
+            if (document.exitPointerLock) {
+                document.exitPointerLock();
+            }
+        } else {
+            modal.style.display = 'none';
+        }
+    }
+
     selectSlot(index) {
         if (index < 0 || index >= this.hotbarItems.length) return;
         this.selectedSlot = index;
@@ -342,9 +446,15 @@ class GaneshMinecraftGame {
                 this.togglePalette();
             }
 
-            // Escape closes palette
+            // 'M' Key to toggle Multiplayer Room Code modal
+            if (e.code === 'KeyM') {
+                this.toggleMultiplayerModal();
+            }
+
+            // Escape closes modals
             if (e.code === 'Escape') {
                 this.togglePalette(false);
+                this.toggleMultiplayerModal(false);
             }
 
             // 'E' Key to interact with Lord Ganesha (nik3: InteractWithIdol)
@@ -396,6 +506,9 @@ class GaneshMinecraftGame {
         }
 
         this.voxelWorld.placeBlock(snap.x, snap.y, snap.z, currentItem.id, true);
+        if (this.multiplayer) {
+            this.multiplayer.broadcastPlaceBlock(snap.x, snap.y, snap.z, currentItem.id);
+        }
     }
 
     handleBreakBlock() {
@@ -411,6 +524,7 @@ class GaneshMinecraftGame {
         if (obj && obj.userData && obj.userData.coords) {
             const { x, y, z } = obj.userData.coords;
             this.voxelWorld.breakBlock(x, y, z);
+            if (this.multiplayer) this.multiplayer.broadcastBreakBlock(x, y, z);
             return;
         }
 
@@ -418,6 +532,7 @@ class GaneshMinecraftGame {
         for (const [key, val] of this.voxelWorld.blocks) {
             if (val.mesh === obj) {
                 this.voxelWorld.breakBlock(val.x, val.y, val.z);
+                if (this.multiplayer) this.multiplayer.broadcastBreakBlock(val.x, val.y, val.z);
                 break;
             }
         }
@@ -453,10 +568,14 @@ class GaneshMinecraftGame {
         }
     }
 
-    performAartiCeremony() {
+    performAartiCeremony(broadcast = true) {
         if (this.isAartiActive) return;
         this.isAartiActive = true;
         this.blessingsCount++;
+
+        if (broadcast && this.multiplayer) {
+            this.multiplayer.broadcastAarti();
+        }
 
         const blessingsEl = document.getElementById('blessings-count');
         if (blessingsEl) blessingsEl.innerText = this.blessingsCount;
@@ -656,9 +775,9 @@ class GaneshMinecraftGame {
                 this.voxelWorld.updateWater(elapsedTime);
             }
 
-            // Update animated devotees
-            if (this.npcManager) {
-                this.npcManager.update(delta, this.player.position, this.isAartiActive);
+            // Update multiplayer remote player avatar
+            if (this.multiplayer) {
+                this.multiplayer.update(delta);
             }
 
             // 4. Animate Lord Ganesha Divine Aura
