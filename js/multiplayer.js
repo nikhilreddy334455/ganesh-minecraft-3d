@@ -302,52 +302,52 @@ class MultiplayerManager {
         const group = new THREE.Group();
         group.position.copy(this.remotePlayerTarget.pos);
 
-        // Materials
-        const skinMat = new THREE.MeshStandardMaterial({ color: 0xF5CBA7, roughness: 0.8 });
-        const shirtMat = new THREE.MeshStandardMaterial({ color: 0x00897B, roughness: 0.7 }); // Festive teal kurta
-        const pantsMat = new THREE.MeshStandardMaterial({ color: 0xD35400, roughness: 0.7 }); // Saffron dhoti/pants
-        const hairMat = new THREE.MeshStandardMaterial({ color: 0x2C3E50 });
+        // Sleek Minecraft Voxel Gamer Bot (Zero human/people elements)
+        const diamondMat = new THREE.MeshStandardMaterial({ color: 0x00E5FF, roughness: 0.3, metalness: 0.6 });
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, roughness: 0.3, metalness: 0.7 });
+        const darkArmorMat = new THREE.MeshStandardMaterial({ color: 0x263238, roughness: 0.5 });
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0x76FF03 });
 
         // Head (0.4 x 0.4 x 0.4)
         const headGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-        const head = new THREE.Mesh(headGeo, skinMat);
+        const head = new THREE.Mesh(headGeo, darkArmorMat);
         head.position.y = 1.6;
         head.castShadow = true;
         group.add(head);
 
-        // Hair / Turban cap
-        const hairGeo = new THREE.BoxGeometry(0.42, 0.15, 0.42);
-        const hair = new THREE.Mesh(hairGeo, hairMat);
-        hair.position.y = 0.18;
-        head.add(hair);
+        // Glowing visor
+        const visorGeo = new THREE.BoxGeometry(0.32, 0.08, 0.42);
+        const visor = new THREE.Mesh(visorGeo, eyeMat);
+        visor.position.y = 0.02;
+        head.add(visor);
 
         // Torso (0.5 x 0.65 x 0.3)
         const bodyGeo = new THREE.BoxGeometry(0.5, 0.65, 0.3);
-        const body = new THREE.Mesh(bodyGeo, shirtMat);
+        const body = new THREE.Mesh(bodyGeo, diamondMat);
         body.position.y = 1.05;
         body.castShadow = true;
         group.add(body);
 
         // Arms
         const armGeo = new THREE.BoxGeometry(0.18, 0.6, 0.18);
-        const leftArm = new THREE.Mesh(armGeo, skinMat);
+        const leftArm = new THREE.Mesh(armGeo, goldMat);
         leftArm.position.set(-0.35, 1.05, 0);
         leftArm.castShadow = true;
         group.add(leftArm);
 
-        const rightArm = new THREE.Mesh(armGeo, skinMat);
+        const rightArm = new THREE.Mesh(armGeo, goldMat);
         rightArm.position.set(0.35, 1.05, 0);
         rightArm.castShadow = true;
         group.add(rightArm);
 
         // Legs
         const legGeo = new THREE.BoxGeometry(0.2, 0.7, 0.22);
-        const leftLeg = new THREE.Mesh(legGeo, pantsMat);
+        const leftLeg = new THREE.Mesh(legGeo, darkArmorMat);
         leftLeg.position.set(-0.14, 0.35, 0);
         leftLeg.castShadow = true;
         group.add(leftLeg);
 
-        const rightLeg = new THREE.Mesh(legGeo, pantsMat);
+        const rightLeg = new THREE.Mesh(legGeo, darkArmorMat);
         rightLeg.position.set(0.14, 0.35, 0);
         rightLeg.castShadow = true;
         group.add(rightLeg);
