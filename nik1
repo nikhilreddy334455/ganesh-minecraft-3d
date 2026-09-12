@@ -1,0 +1,8 @@
+Goal: Build a fully functional, error-free 3D browser-based game [3D genre, e.g., endless runner / survival action] using Three.js and vanilla JavaScript inside a single or modular clean project structure.
+
+Architecture & Constraints:
+1. Deterministic simulation: Keep game logic, physics (bounding-box collision detection), and render loops strictly decoupled.
+2. Input mapping: Standardize keyboard controls (WASD, Space for jump) and map them safely to prevent undefined key errors or unhandled input states.
+3. Rendering boundaries: Implement a safe resize listener, fallback lighting, and basic geometry placeholders before loading external assets to prevent black-screen rendering crashes.
+4. Error-free execution loop: Run local build/compile commands, check the console/terminal for runtime or syntax errors, auto-patch any failures, and verify frame-rate stability (target 60fps) before finishing.
+5. Self-Correction Rule: If any component or import fails, do not stop or ask the user prematurely; diagnose the stack trace, rewrite the broken module, and re-test until the simulation runs cleanly and is fully playable via the local preview link.

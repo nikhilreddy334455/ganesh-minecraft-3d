@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1a1209">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Ganesh Pandal Craft 3D — Minecraft Voxel Utsav & Aarti</title>
+    <meta name="description" content="Build your sacred Ganesh Pandal tent in a 3D Minecraft voxel world, place Lord Ganesha, and perform divine Aarti ceremonies!">
+    <link rel="stylesheet" href="styles.css?v=5.0">
+</head>
+<body>
+    <!-- 3D Canvas Target -->
+    <div id="canvas-container"></div>
+
+    <!-- Minecraft Screen Crosshair -->
+    <div id="crosshair"></div>
+
+    <!-- Center Interaction Prompt (nik3 E Key interaction) -->
+    <div id="interact-prompt">✨ Press [ E ] to Perform Aarti to Lord Ganesha ✨</div>
+
+    <!-- Aarti In Progress Banner -->
+    <div id="aarti-banner">🪔 JAI GANESH DEVA — SACRED AARTI IN PROGRESS 🌺</div>
+
+    <!-- Top HUD Navigation -->
+    <div id="top-hud">
+        <div class="hud-title-card">
+            <span class="game-title">🕉️ Ganesh Pandal Craft 3D</span>
+            <span class="blessings-badge">🙏 Blessings: <span id="blessings-count">0</span></span>
+        </div>
+        <div class="hud-actions">
+            <button id="btn-build-pandal" class="hud-btn hud-btn-primary" title="Instantly erect a grand festive tent">
+                ⛺ Pandal (T)
+            </button>
+            <button id="btn-palette" class="hud-btn" title="Choose from 17+ creative blocks">
+                🎒 Blocks (B)
+            </button>
+            <button id="btn-aarti" class="hud-btn" title="Perform Aarti Pooja">
+                🪔 Aarti (E)
+            </button>
+            <button id="btn-mute" class="hud-btn" title="Toggle audio">
+                🔊 Sound
+            </button>
+            <button id="btn-help" class="hud-btn" title="View controls and instructions">
+                ❓ Help
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Virtual Touch Controls (D-Pad & Action Buttons) -->
+    <div id="mobile-controls">
+        <div id="touch-dpad">
+            <button id="dpad-up" class="dpad-btn" data-dir="forward" aria-label="Move Forward">▲</button>
+            <div class="dpad-middle">
+                <button id="dpad-left" class="dpad-btn" data-dir="left" aria-label="Strafe Left">◀</button>
+                <div class="dpad-center"></div>
+                <button id="dpad-right" class="dpad-btn" data-dir="right" aria-label="Strafe Right">▶</button>
+            </div>
+            <button id="dpad-down" class="dpad-btn" data-dir="backward" aria-label="Move Backward">▼</button>
+        </div>
+
+        <div id="touch-actions">
+            <div class="touch-action-row">
+                <button id="btn-touch-palette" class="touch-btn" title="Blocks Palette">🎒 Blocks</button>
+                <button id="btn-touch-aarti" class="touch-btn touch-btn-aarti" title="Perform Aarti">🪔 Aarti</button>
+            </div>
+            <div class="touch-action-row">
+                <button id="btn-touch-break" class="touch-btn touch-btn-break" title="Break Block">⛏️ Break</button>
+                <button id="btn-touch-place" class="touch-btn touch-btn-place" title="Place Block">🧱 Place</button>
+            </div>
+            <button id="btn-touch-jump" class="touch-btn touch-btn-jump" title="Jump (Hold for high jump)">🦘 Jump</button>
+        </div>
+    </div>
+
+    <!-- Bottom Minecraft Hotbar -->
+    <div id="hotbar-container">
+        <div id="hotbar">
+            <!-- Dynamically populated slots 1 to 8 -->
+        </div>
+        <div class="hotbar-tip">Scroll wheel or tap slot to choose • Left: Place • Right: Break</div>
+    </div>
+
+    <!-- Blocker / Start Screen (Pointer Lock) -->
+    <div id="blocker">
+        <div id="instructions">
+            <button id="btn-close-modal" class="modal-close-btn" title="Close and play">✕</button>
+            <h1>🕉️ GANESH PANDAL CRAFT</h1>
+            <p class="subtitle">Build your sacred Ganesh Utsav Tent block-by-block, place Lord Ganesha in the sanctum, and perform the divine Aarti ceremony!</p>
+            
+            <div class="controls-grid">
+                <div class="control-item">
+                    <span class="key-badge">W A S D</span>
+                    <span>Walk / Move (or Virtual D-Pad)</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">SPACE</span>
+                    <span>Jump (or 🦘 Jump Button)</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">LEFT CLICK</span>
+                    <span>Place Block (or 🧱 Place)</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">RIGHT CLICK</span>
+                    <span>Break Block (or ⛏️ Break)</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">E</span>
+                    <span>Perform Aarti (or 🪔 Aarti Button)</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">1 – 8 / TAP</span>
+                    <span>Select Hotbar Item</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">SWIPE SCREEN</span>
+                    <span>Look Around in 3D</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">T</span>
+                    <span>Auto-Build Grand Tent</span>
+                </div>
+            </div>
+
+            <div class="play-prompt">👉 CLICK BUTTON OR PRESS SPACE/ENTER TO START 👈</div>
+            <button id="btn-start-game" class="hud-btn hud-btn-primary" style="margin: 16px auto 0 auto; font-size: 16px; padding: 12px 32px; border-radius: 25px; box-shadow: 0 4px 20px rgba(255, 183, 3, 0.4); cursor: pointer;">
+                🚩 ENTER SANCTUM & START PLAYING
+            </button>
+        </div>
+    </div>
+
+    <!-- Creative Blocks Palette Modal -->
+    <div id="palette-modal" class="modal-overlay" style="display: none;">
+        <div class="palette-card">
+            <div class="palette-header">
+                <h2>🎒 CREATIVE BLOCK PALETTE</h2>
+                <button id="btn-close-palette" class="modal-close-btn" title="Close Palette">✕</button>
+            </div>
+            <p class="palette-sub">Click or tap any block to equip it to your current active hand slot!</p>
+            <div id="palette-grid" class="palette-grid">
+                <!-- Dynamically populated in game.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="game-toast"></div>
+
+    <!-- Engine Scripts (Zero-dependency local bundle with cache bust) -->
+    <script src="js/three.min.js?v=5.0"></script>
+    <script src="js/audio.js?v=5.0"></script>
+    <script src="js/ganesha.js?v=5.0"></script>
+    <script src="js/npc.js?v=5.0"></script>
+    <script src="js/voxel.js?v=5.0"></script>
+    <script src="js/player.js?v=5.0"></script>
+    <script src="js/game.js?v=5.0"></script>
+</body>
+</html>

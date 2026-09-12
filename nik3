@@ -1,0 +1,73 @@
+using UnityEngine;
+
+public class VoxelBuilder : MonoBehaviour
+{
+    [Header("Assign in Inspector")]
+    public GameObject tentBlockPrefab;
+    public GameObject ganeshaPrefab;
+    public AudioClip aartiAudio;
+
+    private Camera playerCamera;
+    private AudioSource audioSource;
+
+    void Start()
+    {
+        // Automatically finds the player camera and adds an audio source to prevent null errors
+        playerCamera = Camera.main;
+        audioSource = gameObject.AddComponent<AudioSource>();
+    }
+
+    void Update()
+    {
+        // Left Click to place a Tent Block
+        if (Input.GetMouseButtonDown(0))
+        {
+            PlaceObject(tentBlockPrefab);
+        }
+
+        // Right Click to place the Ganesha Idol
+        if (Input.GetMouseButtonDown(1))
+        {
+            PlaceObject(ganeshaPrefab);
+        }
+
+        // Press 'E' to interact (Play Aarti)
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            InteractWithIdol();
+        }
+    }
+
+    void PlaceObject(GameObject prefab)
+    {
+        if (prefab == null) return; // Failsafe to prevent crash if prefab is missing
+
+        // Shoots a raycast from the center of the screen
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+        
+        if (Physics.Raycast(ray, out RaycastHit hit, 10f))
+        {
+            // Mathematical formula to snap blocks perfectly to a 1x1x1 grid
+            Vector3 spawnPosition = new Vector3(
+                Mathf.Round(hit.point.x + hit.normal.x * 0.5f),
+                Mathf.Round(hit.point.y + hit.normal.y * 0.5f),
+                Mathf.Round(hit.point.z + hit.normal.z * 0.5f)
+            );
+
+            Instantiate(prefab, spawnPosition, Quaternion.identity);
+        }
+    }
+
+    void InteractWithIdol()
+    {
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+        if (Physics.Raycast(ray, out RaycastHit hit, 10f))
+        {
+            // Checks if the player is looking at the idol when they press E
+            if (hit.collider.gameObject.name.Contains("Ganesha") && aartiAudio != null)
+            {
+                audioSource.PlayOneShot(aartiAudio);
+            }
+        }
+    }
+}

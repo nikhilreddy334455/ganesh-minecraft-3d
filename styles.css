@@ -1,0 +1,749 @@
+/* Minecraft + Vedic Festive Glassmorphic Styling */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=VT323&family=Outfit:wght@400;500;600;700&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+    background: #111;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #fff;
+}
+
+#canvas-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    touch-action: none;
+}
+
+/* Minecraft Crosshair */
+#crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10;
+}
+
+#crosshair::before, #crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+#crosshair::before {
+    top: 9px;
+    left: 0;
+    width: 20px;
+    height: 2px;
+}
+
+#crosshair::after {
+    top: 0;
+    left: 9px;
+    width: 2px;
+    height: 20px;
+}
+
+/* Interaction Prompt (Press E) */
+#interact-prompt {
+    display: none;
+    position: absolute;
+    top: 56%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(26, 18, 9, 0.88);
+    border: 2px solid #FFD700;
+    padding: 8px 18px;
+    border-radius: 20px;
+    color: #FFF3B0;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 165, 0, 0.3);
+    z-index: 12;
+    pointer-events: none;
+    animation: promptPulse 1.2s infinite alternate;
+}
+
+@keyframes promptPulse {
+    from { transform: translateX(-50%) scale(1); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+    to { transform: translateX(-50%) scale(1.06); box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); }
+}
+
+/* Devotional Aarti Banner */
+#aarti-banner {
+    display: none;
+    position: absolute;
+    top: 75px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, rgba(217, 4, 41, 0.9), rgba(255, 183, 3, 0.9));
+    border: 2px solid #FFF;
+    border-radius: 30px;
+    padding: 10px 28px;
+    color: #FFF;
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 30px rgba(255, 165, 0, 0.9);
+    z-index: 15;
+    pointer-events: none;
+    text-align: center;
+}
+
+/* Top HUD */
+#top-hud {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.hud-title-card {
+    background: rgba(18, 18, 18, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    border-radius: 12px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+}
+
+.game-title {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 900;
+    color: #FFD700;
+    letter-spacing: 1px;
+}
+
+.blessings-badge {
+    background: linear-gradient(135deg, #FF8C00, #E63946);
+    color: #FFF;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 16px;
+    border: 1px solid #FFD700;
+}
+
+.hud-actions {
+    display: flex;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.hud-btn {
+    background: rgba(25, 25, 25, 0.85);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    color: #FFF3B0;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hud-btn:hover {
+    background: rgba(255, 215, 0, 0.25);
+    border-color: #FFD700;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.hud-btn-primary {
+    background: linear-gradient(135deg, #D90429, #FF8C00);
+    border-color: #FFD700;
+    color: #FFF;
+}
+
+.hud-btn-primary:hover {
+    background: linear-gradient(135deg, #EF233C, #FFAA00);
+    box-shadow: 0 4px 20px rgba(230, 57, 70, 0.5);
+}
+
+/* Minecraft Authentic Hotbar */
+#hotbar-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+    pointer-events: auto;
+}
+
+#hotbar {
+    display: flex;
+    gap: 6px;
+    background: rgba(30, 30, 30, 0.85);
+    padding: 6px;
+    border-radius: 8px;
+    border: 3px solid #4A4A4A;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.hotbar-slot {
+    width: 58px;
+    height: 58px;
+    background: rgba(60, 60, 60, 0.9);
+    border: 3px solid #2B2B2B;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.hotbar-slot:hover {
+    background: rgba(80, 80, 80, 0.95);
+    border-color: #888;
+}
+
+.hotbar-slot.active {
+    border-color: #FFD700;
+    background: rgba(100, 80, 40, 0.9);
+    transform: translateY(-4px) scale(1.08);
+    box-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
+}
+
+.slot-key {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    color: #FFD700;
+    line-height: 1;
+}
+
+.slot-icon {
+    font-size: 24px;
+    margin-top: 4px;
+}
+
+.slot-label {
+    display: none;
+}
+
+.hotbar-tip {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+
+/* Blocker / Start Overlay */
+#blocker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 8, 14, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    transition: opacity 0.3s ease;
+}
+
+#instructions {
+    position: relative;
+    background: linear-gradient(135deg, rgba(30, 20, 35, 0.95), rgba(45, 25, 20, 0.95));
+    border: 2px solid #FFD700;
+    border-radius: 20px;
+    padding: 36px 48px;
+    max-width: 580px;
+    text-align: center;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.2);
+    cursor: pointer;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.6);
+    color: #FFD700;
+    font-size: 18px;
+    font-weight: 700;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    background: rgba(217, 4, 41, 0.8);
+    color: #FFF;
+    border-color: #FFF;
+    transform: scale(1.1);
+}
+
+#instructions h1 {
+    font-family: 'Cinzel', serif;
+    color: #FFD700;
+    font-size: 32px;
+    margin-bottom: 12px;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+#instructions p.subtitle {
+    color: #FFF3B0;
+    font-size: 15px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    text-align: left;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    font-size: 13.5px;
+}
+
+.control-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.key-badge {
+    background: #333;
+    border: 1px solid #777;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: #FFD700;
+    box-shadow: 0 2px 0 #111;
+}
+
+.play-prompt {
+    font-size: 17px;
+    font-weight: 700;
+    color: #FFB703;
+    animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+/* Toast Notifications */
+#game-toast {
+    position: absolute;
+    bottom: 95px;
+    left: 50%;
+    transform: translateX(-50%) translateY(15px);
+    background: rgba(20, 20, 20, 0.92);
+    border: 1px solid #FFD700;
+    color: #FFF3B0;
+    padding: 9px 22px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* Mobile Touch Controls */
+#mobile-controls {
+    display: none;
+    position: absolute;
+    bottom: 90px;
+    left: 0;
+    right: 0;
+    padding: 0 16px;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+    z-index: 30;
+}
+
+/* Show touch controls on touch devices or screens <= 1024px */
+@media (pointer: coarse), (max-width: 1024px) {
+    #mobile-controls {
+        display: flex;
+    }
+}
+
+/* D-Pad Container */
+#touch-dpad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    pointer-events: auto;
+}
+
+.dpad-middle {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.dpad-center {
+    width: 44px;
+    height: 44px;
+    background: rgba(30, 25, 20, 0.6);
+    border-radius: 8px;
+    border: 1px dashed rgba(255, 215, 0, 0.3);
+}
+
+.dpad-btn {
+    width: 48px;
+    height: 48px;
+    background: rgba(22, 18, 14, 0.88);
+    border: 2px solid #FFD700;
+    color: #FFD700;
+    font-size: 18px;
+    font-weight: 900;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition: transform 0.1s ease, background 0.1s ease;
+}
+
+.dpad-btn:active, .dpad-btn.active {
+    background: rgba(255, 215, 0, 0.45);
+    transform: scale(0.92);
+}
+
+/* Action Buttons Container */
+#touch-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    pointer-events: auto;
+}
+
+.touch-action-row {
+    display: flex;
+    gap: 8px;
+}
+
+.touch-btn {
+    background: rgba(22, 18, 14, 0.88);
+    border: 2px solid #FFD700;
+    color: #FFF;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition: transform 0.1s ease, background 0.1s ease;
+}
+
+.touch-btn:active, .touch-btn.active {
+    transform: scale(0.92);
+}
+
+.touch-btn-jump {
+    width: 58px;
+    height: 58px;
+    background: linear-gradient(135deg, rgba(255, 183, 3, 0.92), rgba(251, 133, 0, 0.92));
+    border-color: #FFF;
+    color: #111;
+    font-size: 12px;
+    font-weight: 800;
+    box-shadow: 0 4px 16px rgba(251, 133, 0, 0.5);
+}
+
+.touch-btn-aarti {
+    width: 54px;
+    height: 54px;
+    background: linear-gradient(135deg, rgba(217, 4, 41, 0.92), rgba(255, 140, 0, 0.92));
+    border-color: #FFD700;
+}
+
+.touch-btn-place {
+    background: rgba(45, 106, 79, 0.9);
+    border-color: #74C69D;
+}
+
+.touch-btn-break {
+    background: rgba(186, 24, 27, 0.9);
+    border-color: #E5383B;
+}
+
+/* Mobile Responsive Layout for Phones */
+@media (max-width: 768px) {
+    #top-hud {
+        top: 6px;
+        left: 6px;
+        right: 6px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .hud-title-card {
+        padding: 6px 12px;
+        justify-content: space-between;
+    }
+
+    .game-title {
+        font-size: 13px;
+    }
+
+    .blessings-badge {
+        font-size: 11px;
+        padding: 2px 7px;
+    }
+
+    .hud-actions {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    .hud-btn {
+        padding: 5px 8px;
+        font-size: 10.5px;
+        border-radius: 7px;
+        gap: 4px;
+    }
+
+    #hotbar-container {
+        bottom: 8px;
+        width: 100%;
+        padding: 0 4px;
+    }
+
+    #hotbar {
+        padding: 2px 4px;
+        gap: 3px;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .hotbar-slot {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        border-width: 2px;
+    }
+
+    .slot-icon {
+        font-size: 16px;
+        margin-top: 1px;
+    }
+
+    .slot-key {
+        font-size: 10px;
+        top: 0px;
+        left: 2px;
+    }
+
+    .hotbar-tip {
+        display: none;
+    }
+
+    #instructions {
+        padding: 20px 16px;
+        max-width: 94%;
+        max-height: 88vh;
+        overflow-y: auto;
+    }
+
+    #instructions h1 {
+        font-size: 20px;
+    }
+
+    #instructions p.subtitle {
+        font-size: 12.5px;
+        margin-bottom: 14px;
+    }
+
+    .controls-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding: 10px;
+        font-size: 11.5px;
+        margin-bottom: 14px;
+    }
+
+    #aarti-banner {
+        top: 85px;
+        font-size: 13px;
+        padding: 6px 16px;
+    }
+
+    #interact-prompt {
+        font-size: 12px;
+        padding: 6px 14px;
+    }
+
+    #game-toast {
+        bottom: 75px;
+        font-size: 12px;
+        padding: 6px 16px;
+    }
+}
+
+/* Creative Block Palette Modal */
+#palette-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(8px);
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.palette-card {
+    background: linear-gradient(135deg, rgba(28, 18, 12, 0.96), rgba(42, 24, 12, 0.96));
+    border: 2px solid #FFD700;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 620px;
+    width: 92%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(255, 183, 3, 0.4);
+    position: relative;
+}
+
+.palette-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.35);
+    padding-bottom: 10px;
+    margin-bottom: 8px;
+}
+
+.palette-header h2 {
+    font-family: 'Cinzel', serif;
+    color: #FFD700;
+    font-size: 20px;
+    letter-spacing: 1px;
+}
+
+.palette-sub {
+    font-size: 13px;
+    color: #E2E8F0;
+    margin-bottom: 16px;
+}
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+    gap: 12px;
+}
+
+.palette-item {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 215, 0, 0.3);
+    border-radius: 10px;
+    padding: 10px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-align: center;
+}
+
+.palette-item:hover, .palette-item:active {
+    background: rgba(255, 183, 3, 0.25);
+    border-color: #FFD700;
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 4px 15px rgba(255, 183, 3, 0.4);
+}
+
+.palette-item .item-icon {
+    font-size: 26px;
+    margin-bottom: 4px;
+}
+
+.palette-item .item-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #FFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
