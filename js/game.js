@@ -747,18 +747,43 @@ class GaneshMinecraftGame {
             });
         }
 
-        // Mouse Controls: Left Click = Place, Right Click = Break
+        // Mouse Controls: Left Click = Place, Right Click = Break (with Minecraft auto-repeat)
+        let mouseRepeatInterval = null;
         window.addEventListener('mousedown', (e) => {
             if (!this.player.isLocked) return;
 
+            if (mouseRepeatInterval) {
+                clearInterval(mouseRepeatInterval);
+                mouseRepeatInterval = null;
+            }
+
             if (e.button === 0) {
-                // Left Click: Place selected block / idol (as in nik3)
+                // Left Click: Place selected block / idol
                 this.handlePlaceBlock();
+                mouseRepeatInterval = setInterval(() => {
+                    if (this.player && this.player.isLocked) {
+                        this.handlePlaceBlock();
+                    }
+                }, 150);
             } else if (e.button === 2) {
                 // Right Click: Break block / mine
                 this.handleBreakBlock();
+                mouseRepeatInterval = setInterval(() => {
+                    if (this.player && this.player.isLocked) {
+                        this.handleBreakBlock();
+                    }
+                }, 250);
             }
         });
+
+        const stopMouseRepeat = () => {
+            if (mouseRepeatInterval) {
+                clearInterval(mouseRepeatInterval);
+                mouseRepeatInterval = null;
+            }
+        };
+        window.addEventListener('mouseup', stopMouseRepeat);
+        window.addEventListener('blur', stopMouseRepeat);
 
         // Prevent context menu on right-click
         window.addEventListener('contextmenu', (e) => {
@@ -883,16 +908,65 @@ class GaneshMinecraftGame {
             const snap = this.voxelWorld.calculateSnapPosition(hit);
             if (!snap) return;
 
-            // Prevent placing inside player's body
-            const pPos = this.player ? this.player.position : null;
-            if (pPos && Math.abs(snap.x - Math.round(pPos.x)) < 1 &&
-                Math.abs(snap.z - Math.round(pPos.z)) < 1 &&
-                (snap.y === Math.floor(pPos.y) || snap.y === Math.floor(pPos.y - 1))) {
-                return;
+            // Minecraft-accurate player intersection & pillar-jumping (towering) support
+            if (this.player) {
+                const p = this.player;
+                const pPos = p.position;
+                const feetY = pPos.y - p.height;
+                const headY = pPos.y + 0.05;
+
+                // Horizontal bounding box
+                const pMinX = pPos.x - p.radius;
+                const pMaxX = pPos.x + p.radius;
+                const pMinZ = pPos.z - p.radius;
+                const pMaxZ = pPos.z + p.radius;
+
+                const bMinX = snap.x - 0.5;
+                const bMaxX = snap.x + 0.5;
+                const bMinY = snap.y - 0.5;
+                const bMaxY = snap.y + 0.5;
+                const bMinZ = snap.z - 0.5;
+                const bMaxZ = snap.z + 0.5;
+
+                const overlapX = pMaxX > bMinX && pMinX < bMaxX;
+                const overlapZ = pMaxZ > bMinZ && pMinZ < bMaxZ;
+
+                if (overlapX && overlapZ) {
+                    // Placing directly in player's column (pillar jumping / towering like in Minecraft)
+                    // If player is jumping or feet are near/above the top surface of the block being placed:
+                    if (feetY >= bMaxY - 0.55) {
+                        // Place block and pop player onto top surface (Minecraft nerd-pole mechanic)
+                        p.position.y = Math.max(p.position.y, bMaxY + p.height);
+                        if (p.velocity.y < 3.0) {
+                            p.velocity.y = 0;
+                            p.isGrounded = true;
+                        }
+                    } else if (headY > bMinY && feetY < bMaxY) {
+                        // Truly inside body, cannot place
+                        return;
+                    }
+                }
             }
 
             const placed = this.voxelWorld.placeBlock(snap.x, snap.y, snap.z, currentItem.id, true);
             if (!placed) return;
+
+            // When towering, guarantee player is resting securely on top of the newly placed block
+            if (this.player) {
+                const p = this.player;
+                const pPos = p.position;
+                const feetY = pPos.y - p.height;
+                const bMaxY = snap.y + 0.5;
+                if (Math.abs(snap.x - Math.round(pPos.x)) < 1 &&
+                    Math.abs(snap.z - Math.round(pPos.z)) < 1 &&
+                    feetY >= bMaxY - 0.4) {
+                    p.position.y = Math.max(p.position.y, bMaxY + p.height);
+                    if (p.velocity.y < 3.0) {
+                        p.velocity.y = 0;
+                        p.isGrounded = true;
+                    }
+                }
+            }
 
             if (this.levelManager && this.levelManager.onBlockPlaced) {
                 try { this.levelManager.onBlockPlaced(currentItem.id); } catch(e) {}

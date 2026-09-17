@@ -13,11 +13,8 @@ class PlayerController {
 
         this.isGrounded = true;
         this.moveSpeed = 6.0;
-        this.baseJumpForce = 6.2; // Quick tap jump (~1.1 blocks)
-        this.maxJumpHoldTime = 0.34; // Hold time window for high jump
-        this.jumpHoldTimer = 0;
-        this.isJumping = false;
-        this.gravity = 18.0;
+        this.baseJumpForce = 8.5; // Authentic snappy Minecraft jump (~1.38 blocks height)
+        this.gravity = 26.0; // Minecraft-authentic fall acceleration
         this.isInWater = false;
 
         // Camera Euler angles
@@ -379,34 +376,76 @@ class PlayerController {
 
         const btnPlace = document.getElementById('btn-touch-place');
         if (btnPlace) {
-            btnPlace.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            let placeInterval = null;
+            const startPlace = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
                 if (window.soundEngine) window.soundEngine.init();
                 if (window.game) window.game.handlePlaceBlock();
                 btnPlace.classList.add('active');
-                setTimeout(() => btnPlace.classList.remove('active'), 150);
-            }, { passive: false });
-            btnPlace.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (window.game) window.game.handlePlaceBlock();
-            });
+                if (!placeInterval) {
+                    placeInterval = setInterval(() => {
+                        if (window.game) window.game.handlePlaceBlock();
+                    }, 150);
+                }
+            };
+            const stopPlace = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if (placeInterval) {
+                    clearInterval(placeInterval);
+                    placeInterval = null;
+                }
+                btnPlace.classList.remove('active');
+            };
+            btnPlace.addEventListener('touchstart', startPlace, { passive: false });
+            btnPlace.addEventListener('touchend', stopPlace, { passive: false });
+            btnPlace.addEventListener('touchcancel', stopPlace, { passive: false });
+            btnPlace.addEventListener('mousedown', startPlace);
+            btnPlace.addEventListener('mouseup', stopPlace);
+            btnPlace.addEventListener('mouseleave', stopPlace);
+            window.addEventListener('mouseup', stopPlace);
         }
 
         const btnBreak = document.getElementById('btn-touch-break');
         if (btnBreak) {
-            btnBreak.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            let breakInterval = null;
+            const startBreak = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
                 if (window.soundEngine) window.soundEngine.init();
                 if (window.game) window.game.handleBreakBlock();
                 btnBreak.classList.add('active');
-                setTimeout(() => btnBreak.classList.remove('active'), 150);
-            }, { passive: false });
-            btnBreak.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (window.game) window.game.handleBreakBlock();
-            });
+                if (!breakInterval) {
+                    breakInterval = setInterval(() => {
+                        if (window.game) window.game.handleBreakBlock();
+                    }, 250);
+                }
+            };
+            const stopBreak = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if (breakInterval) {
+                    clearInterval(breakInterval);
+                    breakInterval = null;
+                }
+                btnBreak.classList.remove('active');
+            };
+            btnBreak.addEventListener('touchstart', startBreak, { passive: false });
+            btnBreak.addEventListener('touchend', stopBreak, { passive: false });
+            btnBreak.addEventListener('touchcancel', stopBreak, { passive: false });
+            btnBreak.addEventListener('mousedown', startBreak);
+            btnBreak.addEventListener('mouseup', stopBreak);
+            btnBreak.addEventListener('mouseleave', stopBreak);
+            window.addEventListener('mouseup', stopBreak);
         }
 
         const btnAarti = document.getElementById('btn-touch-aarti');
@@ -649,23 +688,13 @@ class PlayerController {
                 }
             }
         } else {
-            // Land physics: dynamic variable jump
+            // Land physics: authentic Minecraft jump mechanics (with auto-jump when holding space)
             if (this.isGrounded) {
                 if (this.keys.jump) {
-                    this.velocity.y = this.baseJumpForce; // initial impulse for short hop
+                    this.velocity.y = this.baseJumpForce;
                     this.isGrounded = false;
-                    this.isJumping = true;
-                    this.jumpHoldTimer = 0;
                 } else {
                     this.velocity.y = 0;
-                }
-            } else if (this.isJumping) {
-                // Long press space sustains thrust to jump significantly higher (~2.8 blocks high!)
-                if (this.keys.jump && this.jumpHoldTimer < this.maxJumpHoldTime && this.velocity.y > 0) {
-                    this.velocity.y += 22.0 * delta;
-                    this.jumpHoldTimer += delta;
-                } else {
-                    this.isJumping = false;
                 }
             }
         }
@@ -760,7 +789,7 @@ class PlayerController {
 
             for (let by = startBy; by >= endBy; by--) {
                 const surfaceY = by + 0.5;
-                if (targetFeet <= surfaceY && currentFeet >= surfaceY - 0.05) {
+                if (targetFeet <= surfaceY && currentFeet >= surfaceY - 0.5) {
                     if (this.isBlockSolidBeneath(this.position.x, by, this.position.z)) {
                         if (surfaceY > highestLandingY) {
                             highestLandingY = surfaceY;
@@ -852,6 +881,7 @@ class PlayerController {
     // Fast distance-culled raycasting from center of the screen (750x speedup)
     getCenterRaycast(objectsToIntersect) {
         if (!objectsToIntersect || objectsToIntersect.length === 0) return null;
+        this.camera.updateMatrixWorld(true);
         this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
         const p = this.camera.position;
         const maxDistSq = (this.raycaster.far + 1.5) * (this.raycaster.far + 1.5);
@@ -863,6 +893,7 @@ class PlayerController {
             const dy = obj.position.y - p.y;
             const dz = obj.position.z - p.z;
             if (dx * dx + dy * dy + dz * dz <= maxDistSq) {
+                obj.updateMatrixWorld(true);
                 candidates.push(obj);
             }
         }

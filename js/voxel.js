@@ -324,6 +324,7 @@ class VoxelWorld {
         mesh.userData = { blockType: type, coords: { x: rx, y: ry, z: rz } };
 
         this.scene.add(mesh);
+        mesh.updateMatrixWorld(true);
 
         let pointLight = null;
         if (type === 'diya' || type === 'lantern') {
@@ -356,6 +357,7 @@ class VoxelWorld {
         ganesha.position.set(x, y - 0.5, z);
         ganesha.userData = { isGanesha: true, coords: { x, y, z }, blockType: 'ganesha' };
         this.scene.add(ganesha);
+        ganesha.updateMatrixWorld(true);
 
         this.ganeshaInstances.push(ganesha);
         this.blocks.set(key, { mesh: ganesha, type: 'ganesha', x, y, z });
