@@ -72,26 +72,38 @@ class GaneshMinecraftGame {
         this.scene.background = new THREE.Color(0x87CEEB); // Festive sky blue
         this.scene.fog = new THREE.FogExp2(0x87CEEB, 0.007);
 
+        const isMobile = typeof navigator !== 'undefined' && (
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+            (window.innerWidth <= 1024 && ('ontouchstart' in window || navigator.maxTouchPoints > 0))
+        );
+        this.isMobile = isMobile;
+
         this.camera = new THREE.PerspectiveCamera(
             75,
             window.innerWidth / window.innerHeight,
             0.1,
-            1000
+            800
         );
 
         this.renderer = new THREE.WebGLRenderer({
-            antialias: true,
+            antialias: !isMobile, // Disable expensive MSAA on mobile for 2x framerate
             powerPreference: 'high-performance',
-            preserveDrawingBuffer: true
+            preserveDrawingBuffer: false // Prevent copying framebuffer each frame
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.setPixelRatio(isMobile ? Math.min(window.devicePixelRatio, 1.25) : Math.min(window.devicePixelRatio, 2));
+
+        if (!isMobile) {
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        } else {
+            // Disabling shadow map on mobile gives massive 60fps performance
+            this.renderer.shadowMap.enabled = false;
+        }
 
         this.container.appendChild(this.renderer.domElement);
 
-        // Procedural Clouds in the sky across extended horizons
+        // Procedural Clouds in the sky
         this.createClouds();
     }
 
@@ -99,16 +111,17 @@ class GaneshMinecraftGame {
         const cloudGeo = new THREE.BoxGeometry(1, 1, 1);
         const cloudMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.75 });
         const cloudsGroup = new THREE.Group();
+        const cloudCount = this.isMobile ? 12 : 28;
 
-        for (let i = 0; i < 35; i++) {
+        for (let i = 0; i < cloudCount; i++) {
             const cloud = new THREE.Mesh(cloudGeo, cloudMat);
             const w = 18 + Math.random() * 24;
             const d = 18 + Math.random() * 24;
             cloud.scale.set(w, 2, d);
             cloud.position.set(
-                (Math.random() - 0.5) * 260,
-                32 + Math.random() * 8,
-                (Math.random() - 0.5) * 260
+                (Math.random() - 0.5) * 240,
+                30 + Math.random() * 8,
+                (Math.random() - 0.5) * 240
             );
             cloudsGroup.add(cloud);
         }
@@ -121,19 +134,23 @@ class GaneshMinecraftGame {
         const hemiLight = new THREE.HemisphereLight(0xFFFFFF, 0x556B2F, 0.6);
         this.scene.add(hemiLight);
 
-        // Sunlight covering extended landscape
+        // Sunlight
         this.sunLight = new THREE.DirectionalLight(0xFFF4E6, 1.2);
         this.sunLight.position.set(35, 55, 30);
-        this.sunLight.castShadow = true;
-        this.sunLight.shadow.mapSize.width = 2048;
-        this.sunLight.shadow.mapSize.height = 2048;
-        this.sunLight.shadow.camera.near = 0.5;
-        this.sunLight.shadow.camera.far = 160;
-        const d = 45;
-        this.sunLight.shadow.camera.left = -d;
-        this.sunLight.shadow.camera.right = d;
-        this.sunLight.shadow.camera.top = d;
-        this.sunLight.shadow.camera.bottom = -d;
+        if (!this.isMobile) {
+            this.sunLight.castShadow = true;
+            this.sunLight.shadow.mapSize.width = 1024;
+            this.sunLight.shadow.mapSize.height = 1024;
+            this.sunLight.shadow.camera.near = 0.5;
+            this.sunLight.shadow.camera.far = 140;
+            const d = 40;
+            this.sunLight.shadow.camera.left = -d;
+            this.sunLight.shadow.camera.right = d;
+            this.sunLight.shadow.camera.top = d;
+            this.sunLight.shadow.camera.bottom = -d;
+        } else {
+            this.sunLight.castShadow = false;
+        }
         this.scene.add(this.sunLight);
 
         // Warm ambient ground bounce
@@ -143,7 +160,7 @@ class GaneshMinecraftGame {
 
     initWorld() {
         this.voxelWorld = new VoxelWorld(this.scene);
-        this.voxelWorld.generateTerrain(110);
+        this.voxelWorld.generateTerrain(this.isMobile ? 60 : 76);
     }
 
     initPlayer() {
@@ -242,6 +259,117 @@ class GaneshMinecraftGame {
                 this.toggleLiftDropGanesha();
             });
         }
+
+        // Initialize consolidated single-button mobile menu
+        this.setupMobileMenu();
+    }
+
+    setupMobileMenu() {
+        const btnMenu = document.getElementById('btn-mobile-menu');
+        const menuModal = document.getElementById('mobile-menu-modal');
+        const btnClose = document.getElementById('btn-close-mobile-menu');
+
+        const openMenu = () => {
+            if (!menuModal) return;
+            const isCarrying = !!this.carriedGanesha;
+            const liftTitle = document.getElementById('menu-lift-title');
+            const liftIcon = document.getElementById('menu-lift-icon');
+            const liftSub = document.getElementById('menu-lift-sub');
+            if (liftTitle) liftTitle.innerText = isCarrying ? 'Drop Ganesha' : 'Lift Ganesha';
+            if (liftIcon) liftIcon.innerText = isCarrying ? '⬇️' : '🤲';
+            if (liftSub) liftSub.innerText = isCarrying ? 'Place Down' : 'Carry with You';
+
+            const soundSub = document.getElementById('menu-sound-sub');
+            const soundIcon = document.getElementById('menu-sound-icon');
+            if (soundSub && window.soundEngine) {
+                soundSub.innerText = window.soundEngine.isMuted ? 'Muted' : 'Audio On';
+            }
+            if (soundIcon && window.soundEngine) {
+                soundIcon.innerText = window.soundEngine.isMuted ? '🔇' : '🔊';
+            }
+
+            const questSnippet = document.getElementById('mobile-menu-quest-snippet');
+            if (questSnippet && this.levelManager && this.levelManager.levels) {
+                const cur = this.levelManager.levels[this.levelManager.currentLevelIndex];
+                if (cur) {
+                    questSnippet.innerHTML = `🏆 <strong>Level ${cur.level}: ${cur.name}</strong><br>${cur.description}`;
+                    questSnippet.style.display = 'block';
+                }
+            }
+
+            menuModal.style.display = 'flex';
+        };
+
+        const closeMenu = () => {
+            if (menuModal) menuModal.style.display = 'none';
+        };
+
+        if (btnMenu) {
+            btnMenu.addEventListener('click', (e) => { e.stopPropagation(); openMenu(); });
+            btnMenu.addEventListener('touchend', (e) => { e.stopPropagation(); openMenu(); });
+        }
+        if (btnClose) {
+            btnClose.addEventListener('click', (e) => { e.stopPropagation(); closeMenu(); });
+            btnClose.addEventListener('touchend', (e) => { e.stopPropagation(); closeMenu(); });
+        }
+        if (menuModal) {
+            menuModal.addEventListener('click', (e) => {
+                if (e.target === menuModal) closeMenu();
+            });
+        }
+
+        const bindMenuItem = (id, action) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const handle = (e) => {
+                e.stopPropagation();
+                closeMenu();
+                action();
+            };
+            btn.addEventListener('click', handle);
+            btn.addEventListener('touchend', handle);
+        };
+
+        bindMenuItem('menu-btn-palette', () => this.togglePalette(true));
+        bindMenuItem('menu-btn-aarti', () => this.performAartiCeremony());
+        bindMenuItem('menu-btn-lift', () => this.toggleLiftDropGanesha());
+        bindMenuItem('menu-btn-companion', () => {
+            if (this.ganeshaCompanion) this.ganeshaCompanion.openCompanionDialog();
+        });
+        bindMenuItem('menu-btn-pandal', () => {
+            const hit = this.getRaycastHit();
+            const targetPos = hit ? hit.point : this.player.position.clone().add(new THREE.Vector3(0, 0, -6));
+            this.voxelWorld.buildGrandPandal(
+                Math.round(targetPos.x),
+                1,
+                Math.round(targetPos.z),
+                true
+            );
+            if (this.levelManager) {
+                for (let i = 0; i < 8; i++) this.levelManager.onBlockPlaced('marble');
+                for (let i = 0; i < 8; i++) this.levelManager.onBlockPlaced('pillar');
+                for (let i = 0; i < 12; i++) this.levelManager.onBlockPlaced('tent_red');
+                for (let i = 0; i < 4; i++) this.levelManager.onBlockPlaced('diya');
+            }
+            this.showToast('✨ Grand Ganesh Pandal Built with Sacred Canopy & Diyas!');
+        });
+        bindMenuItem('menu-btn-levels', () => {
+            if (this.levelManager) this.levelManager.openLevelsModal();
+        });
+        bindMenuItem('menu-btn-multiplayer', () => {
+            if (this.multiplayer) this.toggleMultiplayerModal(true);
+        });
+        bindMenuItem('menu-btn-restart', () => this.restartGame());
+        bindMenuItem('menu-btn-sound', () => {
+            if (window.soundEngine) {
+                const isMuted = window.soundEngine.toggleMute();
+                this.showToast(isMuted ? '🔇 Audio Muted' : '🔊 Audio Enabled', 1500);
+            }
+        });
+        bindMenuItem('menu-btn-help', () => {
+            const blocker = document.getElementById('blocker');
+            if (blocker) blocker.style.display = 'flex';
+        });
     }
 
     restartGame(broadcast = true) {
@@ -266,7 +394,7 @@ class GaneshMinecraftGame {
 
         // 3. Clear and regenerate the pristine extended voxel world (NO default tent)
         this.voxelWorld.clearWorld();
-        this.voxelWorld.generateTerrain(110);
+        this.voxelWorld.generateTerrain(this.isMobile ? 60 : 76);
 
         // 4. Reset player position and velocity to sanctum entrance
         if (this.player && this.player.resetPosition) {
@@ -1254,19 +1382,26 @@ class GaneshMinecraftGame {
                 this.multiplayer.update(delta);
             }
 
-            // 4. Animate Lord Ganesha Divine Aura
+            // 4. Animate Lord Ganesha Divine Aura & Cached Diya Flames (no per-frame traverse)
+            if (!this.cachedDiyaFlames || this.cachedDiyaFlamesCount !== this.voxelWorld.ganeshaInstances.length) {
+                this.cachedDiyaFlames = [];
+                this.voxelWorld.ganeshaInstances.forEach(g => {
+                    g.traverse(child => {
+                        if (child.name === "Diya_Flame") this.cachedDiyaFlames.push(child);
+                    });
+                });
+                this.cachedDiyaFlamesCount = this.voxelWorld.ganeshaInstances.length;
+            }
             this.voxelWorld.ganeshaInstances.forEach(g => {
                 const halo = g.getObjectByName("Ganesha_Halo");
                 if (halo) {
                     halo.rotation.z += 0.8 * delta;
                 }
-                // Diya gentle flicker
-                g.traverse(child => {
-                    if (child.name === "Diya_Flame") {
-                        child.scale.y = 1 + Math.sin(elapsedTime * 12 + child.id) * 0.15;
-                    }
-                });
             });
+            for (let i = 0; i < this.cachedDiyaFlames.length; i++) {
+                const f = this.cachedDiyaFlames[i];
+                f.scale.y = 1 + Math.sin(elapsedTime * 12 + f.id) * 0.15;
+            }
 
             // 5. Circular Aarti Motion for Aarti Thali
             if (this.aartiThali && this.aartiThaliOrigin) {

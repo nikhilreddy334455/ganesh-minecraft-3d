@@ -54,6 +54,9 @@
             <span id="mp-status-badge" class="mp-badge" style="display: none;"></span>
         </div>
         <div class="hud-actions">
+            <button id="btn-mobile-menu" class="hud-btn hud-btn-primary" title="Open Game Menu">
+                ⚡ Menu
+            </button>
             <button id="btn-companion" class="hud-btn hud-btn-companion" title="Talk & Play with Lord Ganesha (G)">
                 🐘 Ganesha (G)
             </button>
@@ -107,19 +110,11 @@
 
         <div id="touch-actions">
             <div class="touch-action-row">
-                <button id="btn-touch-companion" class="touch-btn touch-btn-companion" title="Talk to Ganesha">🐘 Ganesha</button>
-                <button id="btn-touch-levels" class="touch-btn touch-btn-levels" title="Levels">🏆 Levels</button>
-                <button id="btn-touch-restart" class="touch-btn touch-btn-restart" title="Restart Game">🔄 Reset</button>
-                <button id="btn-touch-palette" class="touch-btn" title="Blocks Palette">🎒 Blocks</button>
-                <button id="btn-touch-multiplayer" class="touch-btn touch-btn-multiplayer" title="Play with Friends">👥 Friends</button>
-                <button id="btn-touch-aarti" class="touch-btn touch-btn-aarti" title="Perform Aarti">🪔 Aarti</button>
-            </div>
-            <div class="touch-action-row">
                 <button id="btn-touch-lift" class="touch-btn touch-btn-lift" title="Lift or Drop Lord Ganesha">🤲 Lift</button>
                 <button id="btn-touch-break" class="touch-btn touch-btn-break" title="Break Block">⛏️ Break</button>
                 <button id="btn-touch-place" class="touch-btn touch-btn-place" title="Place Block">🧱 Place</button>
+                <button id="btn-touch-jump" class="touch-btn touch-btn-jump" title="Jump (Hold for high jump)">🦘 Jump</button>
             </div>
-            <button id="btn-touch-jump" class="touch-btn touch-btn-jump" title="Jump (Hold for high jump)">🦘 Jump</button>
         </div>
     </div>
 
@@ -321,6 +316,72 @@
             <div class="ganesha-dialog-body">
                 <div id="ganesha-dialog-text" class="ganesha-speech-bubble"></div>
                 <div id="ganesha-dialog-options" class="ganesha-options-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Consolidated Actions Menu Modal (Single Button Hub) -->
+    <div id="mobile-menu-modal" class="modal-overlay" style="display: none;">
+        <div class="mobile-menu-card">
+            <div class="mobile-menu-header">
+                <div class="mobile-menu-title">
+                    <span class="menu-om">🕉️</span>
+                    <h3>Sanctum Controls</h3>
+                </div>
+                <button id="btn-close-mobile-menu" class="modal-close-btn" title="Close Menu">✕</button>
+            </div>
+            <div id="mobile-menu-quest-snippet" class="menu-quest-banner"></div>
+            <div class="mobile-menu-grid">
+                <button id="menu-btn-palette" class="menu-action-card">
+                    <span class="menu-card-icon">🎒</span>
+                    <span class="menu-card-title">Blocks</span>
+                    <span class="menu-card-sub">17+ Materials</span>
+                </button>
+                <button id="menu-btn-aarti" class="menu-action-card highlight-card">
+                    <span class="menu-card-icon">🪔</span>
+                    <span class="menu-card-title">Aarti Pooja</span>
+                    <span class="menu-card-sub">Mantra & Diyas</span>
+                </button>
+                <button id="menu-btn-lift" class="menu-action-card">
+                    <span id="menu-lift-icon" class="menu-card-icon">🤲</span>
+                    <span id="menu-lift-title" class="menu-card-title">Lift / Drop</span>
+                    <span id="menu-lift-sub" class="menu-card-sub">Lord Ganesha</span>
+                </button>
+                <button id="menu-btn-companion" class="menu-action-card">
+                    <span class="menu-card-icon">🐘</span>
+                    <span class="menu-card-title">Ganesha</span>
+                    <span class="menu-card-sub">Talk & Quests</span>
+                </button>
+                <button id="menu-btn-pandal" class="menu-action-card">
+                    <span class="menu-card-icon">⛺</span>
+                    <span class="menu-card-title">Build Pandal</span>
+                    <span class="menu-card-sub">Instant Tent</span>
+                </button>
+                <button id="menu-btn-levels" class="menu-action-card">
+                    <span class="menu-card-icon">🏆</span>
+                    <span class="menu-card-title">Levels</span>
+                    <span class="menu-card-sub">Campaign Hub</span>
+                </button>
+                <button id="menu-btn-multiplayer" class="menu-action-card">
+                    <span class="menu-card-icon">👥</span>
+                    <span class="menu-card-title">Friends</span>
+                    <span class="menu-card-sub">Multiplayer</span>
+                </button>
+                <button id="menu-btn-restart" class="menu-action-card">
+                    <span class="menu-card-icon">🔄</span>
+                    <span class="menu-card-title">Restart</span>
+                    <span class="menu-card-sub">Reset World</span>
+                </button>
+                <button id="menu-btn-sound" class="menu-action-card">
+                    <span id="menu-sound-icon" class="menu-card-icon">🔊</span>
+                    <span class="menu-card-title">Sound</span>
+                    <span id="menu-sound-sub" class="menu-card-sub">Audio On</span>
+                </button>
+                <button id="menu-btn-help" class="menu-action-card">
+                    <span class="menu-card-icon">❓</span>
+                    <span class="menu-card-title">Help</span>
+                    <span class="menu-card-sub">Controls</span>
+                </button>
             </div>
         </div>
     </div>

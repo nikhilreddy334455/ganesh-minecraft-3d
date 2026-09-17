@@ -661,7 +661,32 @@ body, html {
 }
 
 /* Mobile Responsive Layout for Phones (General) */
-@media (max-width: 768px) {
+@media (max-width: 1024px), (pointer: coarse) {
+    /* HIDE all individual HUD buttons on phone screen */
+    #top-hud .hud-actions .hud-btn:not(#btn-mobile-menu) {
+        display: none !important;
+    }
+
+    /* SHOW ONLY ONE SINGLE MENU BUTTON ON PHONE SCREEN */
+    #btn-mobile-menu {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 5px;
+        font-size: 12.5px !important;
+        font-weight: 800 !important;
+        padding: 6px 14px !important;
+        border-radius: 20px !important;
+        background: linear-gradient(135deg, #FFB703, #FB8500) !important;
+        color: #111 !important;
+        border: 1.5px solid #FFF !important;
+        box-shadow: 0 0 16px rgba(255, 183, 3, 0.6) !important;
+    }
+
+    /* HIDE distracting floating widgets on phone to keep screen clean */
+    #level-hud, #companion-task-hud {
+        display: none !important;
+    }
+
     .game-title {
         font-size: 12px;
     }
@@ -671,28 +696,142 @@ body, html {
         padding: 2px 6px;
     }
 
-    .hud-btn {
-        padding: 4px 7px;
-        font-size: 10px;
-        border-radius: 6px;
-    }
-
     #aarti-banner {
-        top: 60px;
-        font-size: 12px;
-        padding: 5px 14px;
+        top: 50px;
+        font-size: 11.5px;
+        padding: 4px 12px;
     }
 
     #interact-prompt {
         font-size: 11px;
-        padding: 5px 12px;
+        padding: 4px 10px;
+        bottom: 85px;
     }
 
     #game-toast {
-        bottom: 65px;
+        bottom: 60px;
         font-size: 11px;
         padding: 5px 14px;
     }
+}
+
+/* On Desktop: Hide the mobile menu button */
+#btn-mobile-menu {
+    display: none;
+}
+
+/* =========================================================
+   MOBILE ACTIONS MODAL / SINGLE BUTTON MENU DRAWER
+   ========================================================= */
+.mobile-menu-card {
+    background: linear-gradient(135deg, rgba(28, 18, 32, 0.98), rgba(42, 22, 16, 0.98));
+    border: 2px solid #FFD700;
+    border-radius: 22px;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 215, 0, 0.25);
+    width: 92%;
+    max-width: 500px;
+    max-height: 90vh;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    animation: menuScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes menuScaleIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.mobile-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.25);
+}
+
+.mobile-menu-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mobile-menu-title h3 {
+    font-family: 'Cinzel', serif;
+    color: #FFD700;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+.menu-quest-banner {
+    background: rgba(255, 215, 0, 0.12);
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 11.5px;
+    color: #FFF3B0;
+    margin-bottom: 10px;
+    line-height: 1.4;
+    display: none;
+}
+
+.mobile-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+@media screen and (orientation: landscape), screen and (min-width: 480px) {
+    .mobile-menu-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.menu-action-card {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 215, 0, 0.35);
+    border-radius: 14px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #FFF;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    touch-action: manipulation;
+}
+
+.menu-action-card:active {
+    transform: scale(0.94);
+    background: rgba(255, 215, 0, 0.28);
+    border-color: #FFD700;
+}
+
+.menu-card-icon {
+    font-size: 22px;
+}
+
+.menu-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #FFF;
+}
+
+.menu-card-sub {
+    font-size: 9.5px;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.highlight-card {
+    background: linear-gradient(135deg, rgba(217, 4, 41, 0.35), rgba(255, 140, 0, 0.35));
+    border-color: #FF9E00;
 }
 
 /* =========================================================
@@ -732,12 +871,16 @@ body, html {
         align-items: center;
     }
 
-    .hud-btn {
-        padding: 4px 7px;
-        font-size: 9.5px;
-        border-radius: 6px;
-        gap: 3px;
-        white-space: nowrap;
+    /* Keep ONLY the single Menu button visible on phone in landscape */
+    #top-hud .hud-actions .hud-btn:not(#btn-mobile-menu) {
+        display: none !important;
+    }
+
+    #btn-mobile-menu {
+        display: inline-flex !important;
+        font-size: 11.5px !important;
+        padding: 5px 12px !important;
+        border-radius: 16px !important;
     }
 
     /* Mobile Controls: Dual-Thumb Minecraft Layout */

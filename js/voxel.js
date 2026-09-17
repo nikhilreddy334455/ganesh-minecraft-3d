@@ -422,13 +422,12 @@ class VoxelWorld {
             }
         }
 
-        if (block.type === 'ganesha') {
-            const idx = this.ganeshaInstances.indexOf(block.mesh);
-            if (idx !== -1) this.ganeshaInstances.splice(idx, 1);
-        }
-
         if (window.soundEngine) {
             window.soundEngine.playBreakBlock();
+        }
+
+        if (y === 0 && !this.blocks.has(this.getKey(x, -1, z))) {
+            this.placeBlock(x, -1, z, 'dirt', false);
         }
 
         return true;
@@ -625,14 +624,18 @@ class VoxelWorld {
         this.particles.length = 0;
     }
 
-    generateWorld(size = 110) {
+    generateWorld(size) {
+        const isMobile = typeof navigator !== 'undefined' && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 1024));
+        if (!size) {
+            size = isMobile ? 66 : 84;
+        }
         const half = Math.floor(size / 2);
 
         // Extended Sacred Lake definition on East side
         const lakeMinX = 18;
-        const lakeMaxX = 42;
-        const lakeMinZ = -22;
-        const lakeMaxZ = 20;
+        const lakeMaxX = Math.min(42, half - 2);
+        const lakeMinZ = -20;
+        const lakeMaxZ = 18;
 
         for (let x = -half; x <= half; x++) {
             for (let z = -half; z <= half; z++) {
@@ -643,35 +646,30 @@ class VoxelWorld {
                 const isLakeBank = (x >= lakeMinX - 2 && x <= lakeMaxX + 2 && z >= lakeMinZ - 2 && z <= lakeMaxZ + 2) && !inLake;
 
                 // Central Cobblestone Paths (Long Ceremonial Avenues across extended land)
-                const isNorthSouthPath = (Math.abs(x) <= 1 && ((z >= 5 && z <= 48) || (z <= -5 && z >= -48)));
-                const isEastWestPath = (Math.abs(z) <= 1 && ((x >= 5 && x <= lakeMinX - 2) || (x <= -5 && x >= -48)));
+                const isNorthSouthPath = (Math.abs(x) <= 1 && ((z >= 5 && z <= half - 4) || (z <= -5 && z >= -(half - 4))));
+                const isEastWestPath = (Math.abs(z) <= 1 && ((x >= 5 && x <= lakeMinX - 2) || (x <= -5 && x >= -(half - 4))));
                 const isPavedPlaza = (Math.abs(x) <= 5 && Math.abs(z) <= 5);
 
                 if (inLake) {
-                    // Sacred Lake: Water at surface y=0, Sand bed at y=-1, Stone bedrock at y=-2
+                    // Sacred Lake: Water at surface y=0, with bed underneath
                     this.placeBlock(x, 0, z, 'water');
-                    this.placeBlock(x, -1, z, 'sand');
-                    this.placeBlock(x, -2, z, 'stone');
                 } else if (isLakeBank) {
                     // Sandy beach shore around lake
                     this.placeBlock(x, 0, z, 'sand');
-                    this.placeBlock(x, -1, z, 'sand');
                 } else if (isNorthSouthPath || isEastWestPath) {
                     // Cobblestone ceremonial walkway
                     this.placeBlock(x, 0, z, 'cobblestone');
-                    this.placeBlock(x, -1, z, 'dirt');
                 } else if (isPavedPlaza) {
                     // Marble plinth surround
                     this.placeBlock(x, 0, z, 'marble');
-                    this.placeBlock(x, -1, z, 'dirt');
                 } else {
-                    // Lush Meadow landscape across extended land
+                    // Lush Meadow landscape across extended land (surface layer)
                     this.placeBlock(x, 0, z, 'grass');
-                    this.placeBlock(x, -1, z, 'dirt');
 
-                    // Majestic perimeter sacred hills (enclosing the vast extended valley)
-                    if (distCenter > 40) {
-                        const hillHeight = Math.min(5, Math.floor((distCenter - 40) / 2.8) + 1);
+                    // Perimeter sacred hills (only on the edges)
+                    const hillStart = half - 16;
+                    if (distCenter > hillStart) {
+                        const hillHeight = Math.min(4, Math.floor((distCenter - hillStart) / 3) + 1);
                         for (let h = 1; h <= hillHeight; h++) {
                             const hillType = (h === hillHeight) ? 'grass' : 'stone';
                             this.placeBlock(x, h, z, hillType);
@@ -721,8 +719,8 @@ class VoxelWorld {
         });
     }
 
-    generateTerrain(size = 110) {
-        this.generateWorld(110);
+    generateTerrain(size) {
+        this.generateWorld(size);
     }
 }
 
