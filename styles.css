@@ -121,7 +121,7 @@ body, html {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    z-index: 10;
+    z-index: 200;
     pointer-events: none;
 }
 
@@ -657,19 +657,25 @@ body, html {
     }
 }
 
-/* Creative Block Palette Modal */
-#palette-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.78);
-    backdrop-filter: blur(8px);
-    z-index: 120;
+/* Universal Modal Overlay for Palette, Multiplayer, and Levels */
+.modal-overlay, #palette-modal, #multiplayer-modal, #levels-modal, #level-complete-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(10, 8, 14, 0.88) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    z-index: 9999 !important;
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: auto !important;
+}
+
+.modal-overlay *, #palette-modal *, #multiplayer-modal *, #levels-modal * {
+    pointer-events: auto;
 }
 
 .palette-card {
@@ -994,3 +1000,967 @@ body, html {
     border-color: #FFD700;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
 }
+
+/* ==========================================================================
+   FESTIVAL LEVELS PROGRESSION SYSTEM (HUD, MODALS & CELEBRATIONS)
+   ========================================================================== */
+
+/* Top HUD Levels Button */
+.hud-btn-levels {
+    background: linear-gradient(135deg, rgba(255, 183, 3, 0.35), rgba(220, 47, 2, 0.35)) !important;
+    border: 1.5px solid #FFD700 !important;
+    color: #FFF3B0 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.35) !important;
+}
+
+.hud-btn-levels:hover {
+    background: linear-gradient(135deg, rgba(255, 183, 3, 0.6), rgba(220, 47, 2, 0.6)) !important;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6) !important;
+    transform: translateY(-1px);
+}
+
+.touch-btn-levels {
+    background: linear-gradient(135deg, rgba(255, 183, 3, 0.3), rgba(220, 47, 2, 0.3)) !important;
+    border: 1.5px solid #FFD700 !important;
+    color: #FFE082 !important;
+    font-weight: 700 !important;
+}
+
+/* Top HUD & Mobile Restart Button */
+.hud-btn-restart {
+    background: linear-gradient(135deg, rgba(38, 70, 83, 0.5), rgba(42, 157, 143, 0.5)) !important;
+    border: 1.5px solid #48CAE4 !important;
+    color: #E0FBFC !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 10px rgba(72, 202, 228, 0.3) !important;
+}
+
+.hud-btn-restart:hover {
+    background: linear-gradient(135deg, rgba(38, 70, 83, 0.8), rgba(42, 157, 143, 0.8)) !important;
+    border-color: #90E0EF !important;
+    box-shadow: 0 0 18px rgba(72, 202, 228, 0.6) !important;
+    transform: translateY(-1px);
+}
+
+.touch-btn-restart {
+    background: linear-gradient(135deg, rgba(38, 70, 83, 0.4), rgba(42, 157, 143, 0.4)) !important;
+    border: 1.5px solid #48CAE4 !important;
+    color: #E0FBFC !important;
+    font-weight: 700 !important;
+}
+
+/* Floating Level Quest HUD Widget */
+#level-hud {
+    position: absolute;
+    top: 64px;
+    left: 14px;
+    z-index: 12;
+    width: 290px;
+    background: rgba(22, 14, 8, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255, 215, 0, 0.55);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    color: #FFF;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+}
+
+.level-hud-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 8px 12px;
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.12), transparent);
+}
+
+.level-hud-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.level-hud-icon {
+    font-size: 22px;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+}
+
+.level-hud-titles {
+    display: flex;
+    flex-direction: column;
+}
+
+.level-hud-tag {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: #FFB703;
+    text-transform: uppercase;
+}
+
+.level-hud-name {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #FFF3B0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.level-hud-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.level-hud-progress-text {
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(255, 215, 0, 0.2);
+    color: #FFD700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+}
+
+.level-hud-btn, .level-hud-collapse-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    color: #FFF;
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.level-hud-btn:hover, .level-hud-collapse-btn:hover {
+    background: rgba(255, 215, 0, 0.3);
+    border-color: #FFD700;
+    transform: scale(1.05);
+}
+
+/* Progress bar */
+.level-hud-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.level-hud-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFB703, #FB8500);
+    transition: width 0.35s ease;
+    box-shadow: 0 0 8px rgba(255, 183, 3, 0.8);
+}
+
+.level-hud-progress-fill.complete {
+    background: linear-gradient(90deg, #52B788, #40916C);
+    box-shadow: 0 0 10px rgba(82, 183, 136, 0.9);
+}
+
+/* Body & Objectives */
+.level-hud-body {
+    padding: 8px 12px 10px 12px;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+    max-height: 250px;
+    opacity: 1;
+}
+
+.level-hud-body.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.level-hud-objectives {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.level-obj-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.2s ease;
+}
+
+.level-obj-item.done {
+    background: rgba(45, 106, 79, 0.3);
+    border-color: rgba(82, 183, 136, 0.4);
+    color: #D8F3DC;
+}
+
+.level-obj-check {
+    font-size: 11px;
+    font-weight: 800;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.15);
+    color: #BBB;
+}
+
+.level-obj-item.done .level-obj-check {
+    background: #52B788;
+    color: #FFF;
+    box-shadow: 0 0 6px rgba(82, 183, 136, 0.8);
+}
+
+.level-obj-text {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.obj-label {
+    font-weight: 500;
+}
+
+.obj-count {
+    font-weight: 700;
+    color: #FFD700;
+    font-size: 11px;
+}
+
+.level-obj-item.done .obj-count {
+    color: #95D5B2;
+}
+
+.level-hud-completed-banner {
+    margin-top: 8px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(82, 183, 136, 0.3), rgba(64, 145, 108, 0.4));
+    border: 1px solid #52B788;
+    color: #D8F3DC;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 4px;
+    border-radius: 6px;
+    animation: promptPulse 1.5s infinite alternate;
+}
+
+/* ==========================================================================
+   LEVELS SELECTOR & OVERVIEW MODAL
+   ========================================================================== */
+
+.levels-card {
+    background: rgba(26, 16, 8, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 2px solid #FFD700;
+    border-radius: 18px;
+    padding: 24px;
+    max-width: 900px;
+    width: 92%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.3);
+    color: #FFF;
+    animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.levels-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    padding-bottom: 14px;
+}
+
+.levels-title-group h2 {
+    font-family: 'Cinzel', serif;
+    color: #FFD700;
+    font-size: 22px;
+    margin-bottom: 4px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.levels-sub {
+    color: #DDD;
+    font-size: 13px;
+    margin: 0;
+}
+
+.levels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.level-card {
+    background: rgba(35, 22, 12, 0.85);
+    border: 1.5px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.level-card:hover {
+    border-color: rgba(255, 215, 0, 0.7);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+}
+
+.level-card.current {
+    border: 2px solid #FFD700;
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.12), rgba(35, 22, 12, 0.9));
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
+}
+
+.level-card.completed {
+    border-color: #52B788;
+}
+
+.level-card.locked {
+    opacity: 0.65;
+    filter: grayscale(0.5);
+}
+
+.level-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.level-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.level-card-icon {
+    font-size: 28px;
+}
+
+.level-card-title-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.level-card-num {
+    font-size: 10px;
+    font-weight: 800;
+    color: #FFB703;
+    letter-spacing: 1px;
+}
+
+.level-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFF3B0;
+    margin: 0;
+}
+
+/* Badges */
+.lvl-badge-active {
+    background: #FFB703;
+    color: #000;
+    font-weight: 800;
+    font-size: 9px;
+    padding: 3px 6px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+}
+
+.lvl-badge-completed {
+    background: #52B788;
+    color: #000;
+    font-weight: 800;
+    font-size: 9px;
+    padding: 3px 6px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+}
+
+.lvl-badge-unlocked {
+    background: rgba(255, 255, 255, 0.15);
+    color: #FFF;
+    font-weight: 700;
+    font-size: 9px;
+    padding: 3px 6px;
+    border-radius: 8px;
+}
+
+.lvl-badge-locked {
+    background: rgba(0, 0, 0, 0.4);
+    color: #AAA;
+    font-weight: 700;
+    font-size: 9px;
+    padding: 3px 6px;
+    border-radius: 8px;
+}
+
+.level-card-narrative {
+    font-size: 12px;
+    color: #DDD;
+    line-height: 1.4;
+    margin-bottom: 12px;
+    flex: 1;
+}
+
+.level-card-objectives-preview {
+    background: rgba(0, 0, 0, 0.35);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.level-card-obj-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    color: #CCC;
+    margin-bottom: 6px;
+}
+
+.level-card-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.level-card-bar-fill {
+    height: 100%;
+    background: #FFB703;
+    transition: width 0.3s ease;
+}
+
+.level-card-obj-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.level-card-obj-list li {
+    font-size: 11px;
+    color: #BBB;
+    display: flex;
+    justify-content: space-between;
+}
+
+.level-card-obj-list li.done {
+    color: #95D5B2;
+}
+
+.obj-metric {
+    font-weight: 700;
+}
+
+.level-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 10px;
+}
+
+.level-card-reward {
+    display: flex;
+    flex-direction: column;
+}
+
+.reward-label {
+    font-size: 9px;
+    color: #AAA;
+    text-transform: uppercase;
+}
+
+.reward-val {
+    font-size: 11px;
+    font-weight: 700;
+    color: #FFE082;
+}
+
+.level-card-action-btn {
+    background: linear-gradient(135deg, #FFB703, #FB8500);
+    border: none;
+    color: #111;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.level-card-action-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 183, 3, 0.6);
+}
+
+.level-card-action-btn.active {
+    background: rgba(255, 215, 0, 0.2);
+    border: 1px solid #FFD700;
+    color: #FFD700;
+    cursor: default;
+}
+
+.level-card-action-btn.disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   LEVEL COMPLETE CELEBRATION MODAL
+   ========================================================================== */
+
+.celebration-card {
+    background: radial-gradient(circle at center, rgba(45, 24, 12, 0.98), rgba(18, 10, 5, 0.98));
+    border: 2.5px solid #FFD700;
+    border-radius: 24px;
+    padding: 32px 28px;
+    max-width: 440px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.5), 0 20px 40px rgba(0, 0, 0, 0.9);
+    animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #FFF;
+}
+
+.celebration-burst {
+    font-size: 20px;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    animation: promptPulse 1.2s infinite alternate;
+}
+
+.celebration-icon {
+    font-size: 52px;
+    margin: 8px 0 12px 0;
+    filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.8));
+    animation: promptPulse 1.4s infinite alternate;
+}
+
+.celebration-title {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    font-weight: 900;
+    color: #FFD700;
+    margin: 0 0 8px 0;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.celebration-desc {
+    font-size: 13px;
+    color: #E0E0E0;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.celebration-reward-pill {
+    background: rgba(255, 215, 0, 0.15);
+    border: 1.5px solid #FFD700;
+    border-radius: 16px;
+    padding: 10px 18px;
+    display: inline-flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.celebration-reward-pill .reward-title {
+    font-size: 10px;
+    font-weight: 800;
+    color: #FFB703;
+    letter-spacing: 1px;
+}
+
+.celebration-reward-pill .reward-amount {
+    font-size: 16px;
+    font-weight: 800;
+    color: #FFF3B0;
+}
+
+.celebration-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.celebration-btn {
+    width: 100%;
+    font-size: 15px;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: 800;
+}
+
+.celebration-btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #BBB;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.celebration-btn-secondary:hover {
+    color: #FFF;
+    border-color: #FFF;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    #level-hud {
+        top: 60px;
+        left: 8px;
+        width: 250px;
+    }
+    .level-hud-name {
+        max-width: 120px;
+        font-size: 12px;
+    }
+    .levels-card {
+        padding: 18px 14px;
+        width: 95%;
+    }
+}
+
+/* ==========================================================================
+   LORD GANESHA STANDING COMPANION & INTERACTIVE TASKS STYLES
+   ========================================================================== */
+
+/* Companion Action Buttons */
+.hud-btn-companion, .touch-btn-companion {
+    background: linear-gradient(135deg, #FF6F00, #E65100) !important;
+    border-color: #FFD54F !important;
+    color: #FFF8E1 !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 14px rgba(255, 111, 0, 0.45) !important;
+}
+
+.hud-btn-companion:hover {
+    background: linear-gradient(135deg, #FFA000, #FF6F00) !important;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 20px rgba(255, 179, 0, 0.6) !important;
+}
+
+/* Lift & Drop Button Styles */
+.hud-btn-lift, .touch-btn-lift {
+    background: linear-gradient(135deg, #FF8F00, #E64A19) !important;
+    border-color: #FFE082 !important;
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 14px rgba(230, 74, 25, 0.5) !important;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hud-btn-lift:hover, .touch-btn-lift:hover {
+    background: linear-gradient(135deg, #FFA726, #F4511E) !important;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 22px rgba(255, 112, 67, 0.65) !important;
+}
+
+.hud-btn-lift.carrying, .touch-btn-lift.carrying {
+    background: linear-gradient(135deg, #00C853, #009624) !important;
+    border-color: #B9F6CA !important;
+    color: #FFFFFF !important;
+    animation: pulseCarryingGanesha 1.6s infinite ease-in-out !important;
+}
+
+@keyframes pulseCarryingGanesha {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(0, 230, 118, 0.5), 0 4px 14px rgba(0, 200, 83, 0.6);
+        transform: scale(1.0);
+    }
+    50% {
+        box-shadow: 0 0 22px rgba(0, 230, 118, 0.85), 0 6px 22px rgba(0, 200, 83, 0.8);
+        transform: scale(1.06);
+    }
+}
+
+/* Floating Companion Task HUD Widget */
+#companion-task-hud {
+    position: fixed;
+    top: 140px;
+    left: 18px;
+    background: rgba(22, 14, 5, 0.92);
+    border: 1.5px solid rgba(255, 179, 0, 0.65);
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 100;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 179, 0, 0.25);
+    backdrop-filter: blur(12px);
+    width: 290px;
+    animation: fadeInSlideRight 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.comp-hud-icon {
+    font-size: 32px;
+    filter: drop-shadow(0 2px 8px rgba(255, 183, 3, 0.7));
+    animation: gentlePulse 2s infinite ease-in-out;
+}
+
+.comp-hud-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.comp-hud-tag {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #FFB300;
+    text-transform: uppercase;
+}
+
+.comp-hud-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #FFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.comp-hud-progress {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 5px 0 3px;
+}
+
+.comp-hud-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #FFB300, #FFD54F);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px #FFD54F;
+}
+
+.comp-hud-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: #FFE082;
+}
+
+.comp-hud-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #BBB;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s ease;
+}
+
+.comp-hud-cancel:hover {
+    background: rgba(244, 67, 54, 0.4);
+    border-color: #F44336;
+    color: #FFF;
+}
+
+/* Lord Ganesha Interactive Dialogue Modal */
+.ganesha-dialog-card {
+    background: radial-gradient(circle at top, #2C1B0B, #120A04 90%);
+    border: 2px solid #FFD54F;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 520px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 179, 0, 0.35);
+    animation: scaleModalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: #FFF;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ganesha-dialog-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid rgba(255, 213, 79, 0.25);
+    padding-bottom: 12px;
+}
+
+.ganesha-avatar-circle {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF8F00, #D84315);
+    border: 2px solid #FFE082;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    box-shadow: 0 0 16px rgba(255, 179, 0, 0.6);
+    animation: gentlePulse 2.5s infinite ease-in-out;
+}
+
+.ganesha-header-text {
+    flex: 1;
+}
+
+.ganesha-header-text h2 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #FFE082;
+    margin: 0;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.ganesha-header-subtitle {
+    font-size: 11px;
+    color: #FFCA28;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.ganesha-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ganesha-speech-bubble {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    border-left: 4px solid #FFD54F;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #FFF9C4;
+    font-style: normal;
+}
+
+.ganesha-options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.ganesha-opt-btn {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 213, 79, 0.35);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #FFF;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ganesha-opt-btn:hover {
+    background: rgba(255, 179, 0, 0.25);
+    border-color: #FFE082;
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 4px 16px rgba(255, 179, 0, 0.35);
+}
+
+.ganesha-opt-primary {
+    background: linear-gradient(135deg, rgba(255, 111, 0, 0.4), rgba(230, 81, 0, 0.4));
+    border-color: #FFB300;
+}
+
+.ganesha-opt-primary:hover {
+    background: linear-gradient(135deg, rgba(255, 111, 0, 0.7), rgba(230, 81, 0, 0.7));
+}
+
+.ganesha-opt-secondary {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #CCC;
+    text-align: center;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+.ganesha-opt-secondary:hover {
+    color: #FFF;
+    border-color: #FFF;
+}
+
+.ganesha-opt-danger {
+    border-color: rgba(244, 67, 54, 0.4);
+    color: #FF8A80;
+    text-align: center;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+.ganesha-opt-danger:hover {
+    background: rgba(244, 67, 54, 0.25);
+    border-color: #FF5252;
+}
+
+.task-opt-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFE082;
+}
+
+.task-opt-desc {
+    font-size: 11.5px;
+    color: #E0E0E0;
+    opacity: 0.85;
+}
+
+@keyframes fadeInSlideRight {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+

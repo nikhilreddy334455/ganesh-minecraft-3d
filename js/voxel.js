@@ -349,6 +349,9 @@ class VoxelWorld {
 
     placeGanesha(x, y, z, playSound = false) {
         const key = this.getKey(x, y, z);
+        if (this.blocks.has(key)) {
+            this.breakBlock(x, y, z);
+        }
         const ganesha = GaneshaModel.createIdol();
         ganesha.position.set(x, y - 0.5, z);
         ganesha.userData = { isGanesha: true, coords: { x, y, z }, blockType: 'ganesha' };
@@ -364,6 +367,32 @@ class VoxelWorld {
         }
 
         return ganesha;
+    }
+
+    // Safely remove idol from altar without explosion particles when lifting
+    removeIdolQuietly(x, y, z) {
+        const key = this.getKey(x, y, z);
+        const block = this.blocks.get(key);
+        if (!block) return null;
+
+        if (block.light) {
+            this.scene.remove(block.light);
+        }
+
+        this.scene.remove(block.mesh);
+        this.blocks.delete(key);
+
+        const mIdx = this.blockMeshes.indexOf(block.mesh);
+        if (mIdx !== -1) {
+            this.blockMeshes.splice(mIdx, 1);
+        }
+
+        if (block.type === 'ganesha') {
+            const idx = this.ganeshaInstances.indexOf(block.mesh);
+            if (idx !== -1) this.ganeshaInstances.splice(idx, 1);
+        }
+
+        return block;
     }
 
     breakBlock(x, y, z) {
@@ -569,14 +598,41 @@ class VoxelWorld {
         this.placeBlock(x + 1, height - 1, z, 'lantern');
     }
 
-    generateWorld(size = 72) {
+    clearWorld() {
+        // Remove all block meshes and attached lights
+        for (const [key, block] of this.blocks) {
+            if (block.light) {
+                this.scene.remove(block.light);
+            }
+            if (block.mesh) {
+                this.scene.remove(block.mesh);
+            }
+        }
+        this.blocks.clear();
+        this.blockMeshes.length = 0;
+        this.waterMeshes.length = 0;
+
+        // Remove any remaining Ganesha instances
+        this.ganeshaInstances.forEach(g => {
+            this.scene.remove(g);
+        });
+        this.ganeshaInstances.length = 0;
+
+        // Clear particles
+        this.particles.forEach(p => {
+            this.scene.remove(p.mesh);
+        });
+        this.particles.length = 0;
+    }
+
+    generateWorld(size = 110) {
         const half = Math.floor(size / 2);
 
-        // Lake definition on East side
-        const lakeMinX = 14;
-        const lakeMaxX = 28;
-        const lakeMinZ = -14;
-        const lakeMaxZ = 12;
+        // Extended Sacred Lake definition on East side
+        const lakeMinX = 18;
+        const lakeMaxX = 42;
+        const lakeMinZ = -22;
+        const lakeMaxZ = 20;
 
         for (let x = -half; x <= half; x++) {
             for (let z = -half; z <= half; z++) {
@@ -586,9 +642,9 @@ class VoxelWorld {
                 const inLake = (x >= lakeMinX && x <= lakeMaxX && z >= lakeMinZ && z <= lakeMaxZ);
                 const isLakeBank = (x >= lakeMinX - 2 && x <= lakeMaxX + 2 && z >= lakeMinZ - 2 && z <= lakeMaxZ + 2) && !inLake;
 
-                // Central Cobblestone Paths
-                const isNorthSouthPath = (Math.abs(x) <= 1 && ((z >= 5 && z <= 30) || (z <= -5 && z >= -30)));
-                const isEastWestPath = (Math.abs(z) <= 1 && ((x >= 5 && x <= lakeMinX - 2) || (x <= -5 && x >= -30)));
+                // Central Cobblestone Paths (Long Ceremonial Avenues across extended land)
+                const isNorthSouthPath = (Math.abs(x) <= 1 && ((z >= 5 && z <= 48) || (z <= -5 && z >= -48)));
+                const isEastWestPath = (Math.abs(z) <= 1 && ((x >= 5 && x <= lakeMinX - 2) || (x <= -5 && x >= -48)));
                 const isPavedPlaza = (Math.abs(x) <= 5 && Math.abs(z) <= 5);
 
                 if (inLake) {
@@ -600,26 +656,22 @@ class VoxelWorld {
                     // Sandy beach shore around lake
                     this.placeBlock(x, 0, z, 'sand');
                     this.placeBlock(x, -1, z, 'sand');
-                    this.placeBlock(x, -2, z, 'stone');
                 } else if (isNorthSouthPath || isEastWestPath) {
                     // Cobblestone ceremonial walkway
                     this.placeBlock(x, 0, z, 'cobblestone');
                     this.placeBlock(x, -1, z, 'dirt');
-                    this.placeBlock(x, -2, z, 'stone');
                 } else if (isPavedPlaza) {
                     // Marble plinth surround
                     this.placeBlock(x, 0, z, 'marble');
                     this.placeBlock(x, -1, z, 'dirt');
-                    this.placeBlock(x, -2, z, 'stone');
                 } else {
-                    // Lush Meadow landscape
+                    // Lush Meadow landscape across extended land
                     this.placeBlock(x, 0, z, 'grass');
                     this.placeBlock(x, -1, z, 'dirt');
-                    this.placeBlock(x, -2, z, 'stone');
 
-                    // Perimeter sacred hills (at outer borders)
-                    if (distCenter > 28) {
-                        const hillHeight = Math.min(3, Math.floor((distCenter - 28) / 2.5));
+                    // Majestic perimeter sacred hills (enclosing the vast extended valley)
+                    if (distCenter > 40) {
+                        const hillHeight = Math.min(5, Math.floor((distCenter - 40) / 2.8) + 1);
                         for (let h = 1; h <= hillHeight; h++) {
                             const hillType = (h === hillHeight) ? 'grass' : 'stone';
                             this.placeBlock(x, h, z, hillType);
@@ -629,32 +681,38 @@ class VoxelWorld {
             }
         }
 
-        // Sacred Lake Ghats (Temple steps leading into water on west shore)
-        for (let z = -5; z <= 5; z++) {
+        // Sacred Lake Ghats (Tiered temple steps leading into water on west shore)
+        for (let z = -8; z <= 8; z++) {
             this.placeBlock(lakeMinX, 0, z, 'marble');
             this.placeBlock(lakeMinX - 1, 0, z, 'cobblestone');
-            this.placeBlock(lakeMinX - 1, 1, z, 'diya');
+            this.placeBlock(lakeMinX - 1, 1, z, (Math.abs(z) % 2 === 0) ? 'diya' : 'marigold');
         }
 
-        // Plant sacred banyan/oak trees in meadows
+        // Plant sacred banyan/oak trees in extended meadows
         const treeLocations = [
-            [-12, 14], [-18, 20], [-24, -12], [-14, -18],
-            [-10, -24], [-24, 6], [-16, -6], [8, -18],
-            [10, 18], [20, 20], [22, -20], [-8, 22]
+            [-12, 14], [-18, 20], [-26, -12], [-14, -18],
+            [-10, -28], [-28, 6], [-16, -6], [8, -26],
+            [10, 24], [26, 26], [28, -26], [-8, 28],
+            [-34, 18], [-38, -20], [-30, 32], [-22, -36],
+            [6, 38], [-12, -42], [-42, 10], [-40, -12],
+            [14, -38], [34, -10], [36, 12], [-4, -36]
         ];
 
         treeLocations.forEach(([tx, tz]) => {
-            if (Math.abs(tx) <= half - 3 && Math.abs(tz) <= half - 3) {
+            if (Math.abs(tx) <= half - 4 && Math.abs(tz) <= half - 4) {
                 this.plantTree(tx, tz);
             }
         });
 
-        // Decorative pathway street lamps along the walkways
+        // Decorative pathway street lamps along the extended walkways
         const lampLocations = [
-            [2, 0, 10], [-2, 0, 10], [2, 0, 20], [-2, 0, 20],
-            [2, 0, -10], [-2, 0, -10], [2, 0, -20], [-2, 0, -20],
-            [9, 0, 2], [9, 0, -2], [-10, 0, 2], [-10, 0, -2],
-            [-20, 0, 2], [-20, 0, -2]
+            [2, 0, 10], [-2, 0, 10], [2, 0, 22], [-2, 0, 22],
+            [2, 0, 36], [-2, 0, 36], [2, 0, 46], [-2, 0, 46],
+            [2, 0, -10], [-2, 0, -10], [2, 0, -22], [-2, 0, -22],
+            [2, 0, -36], [-2, 0, -36], [2, 0, -46], [-2, 0, -46],
+            [12, 0, 2], [12, 0, -2], [-12, 0, 2], [-12, 0, -2],
+            [-24, 0, 2], [-24, 0, -2], [-36, 0, 2], [-36, 0, -2],
+            [-46, 0, 2], [-46, 0, -2]
         ];
 
         lampLocations.forEach(([lx, ly, lz]) => {
@@ -663,8 +721,8 @@ class VoxelWorld {
         });
     }
 
-    generateTerrain(size = 30) {
-        this.generateWorld(72);
+    generateTerrain(size = 110) {
+        this.generateWorld(110);
     }
 }
 

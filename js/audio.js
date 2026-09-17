@@ -211,6 +211,118 @@ class SoundEngine {
             osc.stop(now + delay + 0.6);
         });
     }
+
+    // Celebratory Level Complete Fanfare (Brass Chimes + Auspicious Conch Glide)
+    playLevelComplete() {
+        if (this.isMuted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+
+        // 1. Triumphant Ascending Arpeggio Chime (C5 - E5 - G5 - C6 - E6)
+        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const time = now + idx * 0.12;
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, time);
+
+            gain.gain.setValueAtTime(0.25, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.9);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(time);
+            osc.stop(time + 0.9);
+        });
+
+        // 2. Auspicious Conch flourish after arpeggio
+        setTimeout(() => {
+            this.playShankh(2.2);
+        }, 500);
+
+        // 3. Sparkle shower chime
+        setTimeout(() => {
+            this.playSparkle();
+        }, 1100);
+    }
+
+    // Jolly Divine Ganesha Laughter Chime
+    playGaneshaLaugh() {
+        if (this.isMuted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const pitches = [523.25, 659.25, 523.25, 659.25, 783.99];
+
+        pitches.forEach((f, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const start = now + i * 0.12;
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, start);
+            osc.frequency.exponentialRampToValueAtTime(f * 1.08, start + 0.08);
+
+            gain.gain.setValueAtTime(0.18, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.14);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(start);
+            osc.stop(start + 0.15);
+        });
+    }
+
+    // Sacred Modak Pickup Chime
+    playModakCollect() {
+        if (this.isMuted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        [880, 1174.66, 1760].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const t = now + idx * 0.06;
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, t);
+
+            gain.gain.setValueAtTime(0.15, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(t);
+            osc.stop(t + 0.35);
+        });
+    }
+
+    // Friendly Companion Greeting Chime
+    playCompanionGreeting() {
+        if (this.isMuted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        [659.25, 880.00, 987.77, 1318.51].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const t = now + idx * 0.08;
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, t);
+
+            gain.gain.setValueAtTime(0.14, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(t);
+            osc.stop(t + 0.5);
+        });
+    }
 }
 
 window.soundEngine = new SoundEngine();

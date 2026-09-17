@@ -1,11 +1,14 @@
-// Peer-to-Peer Multiplayer Module using PeerJS (WebRTC DataChannels)
-// Allows two players to share a 5-character Room Code, connect, build together, and see each other in 3D!
+// Peer-to-Peer & Local Multi-Tab Multiplayer Module for Ganesh Pandal Craft 3D
+// Dual-Transport: WebRTC via PeerJS (Internet / Network) + BroadcastChannel (Local Tabs & Windows)
+// Allows players to share a Room Code, build together, break blocks, perform Aarti, and see each other in 3D!
 
 class MultiplayerManager {
     constructor(game) {
         this.game = game;
         this.peer = null;
         this.conn = null;
+        this.bc = null;
+        this.myClientId = 'usr_' + Math.random().toString(36).substring(2, 9);
         this.isHost = false;
         this.isConnected = false;
         this.roomCode = null;
@@ -35,7 +38,7 @@ class MultiplayerManager {
         }
     }
 
-    // Generate random 5-character room code (e.g. GAN-82 or 7K9X2)
+    // Generate random 5-character room code (e.g. 7K9X2)
     generateRoomCode() {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         let code = '';
@@ -45,7 +48,73 @@ class MultiplayerManager {
         return code;
     }
 
-    // Initialize Host Peer
+    // Host with custom room code (e.g. for Public World 'UTSAV')
+    hostRoomCustom(customCode, onReady) {
+        this.disconnect();
+        this.isHost = true;
+        this.roomCode = customCode.trim().toUpperCase();
+        const peerId = `ganesh-craft-${this.roomCode}`;
+
+        this.updateStatusUI('hosting', this.roomCode);
+        if (onReady) onReady(this.roomCode);
+
+        // 1. BroadcastChannel for local/multi-tab
+        if (typeof BroadcastChannel !== 'undefined') {
+            try {
+                this.bc = new BroadcastChannel('ganesh_craft_room_' + this.roomCode);
+                this.bc.onmessage = (e) => this.handleIncomingData(e.data);
+            } catch (err) {
+                console.warn('BroadcastChannel notice:', err);
+            }
+        }
+
+        // 2. PeerJS for internet/LAN WebRTC
+        if (typeof Peer !== 'undefined') {
+            try {
+                this.peer = new Peer(peerId, {
+                    debug: 1,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ]
+                    }
+                });
+                this.peer.on('open', () => {
+                    this.updateStatusUI('waiting', this.roomCode);
+                });
+                this.peer.on('connection', (conn) => {
+                    this.setupConnection(conn, 'Friend');
+                });
+                this.peer.on('error', () => {
+                    this.updateStatusUI('waiting', this.roomCode);
+                });
+            } catch (err) {
+                console.warn('PeerJS fallback:', err);
+            }
+        }
+    }
+
+    // 1-Click Instant Public World (No room code needed!)
+    joinPublicWorld() {
+        if (this.game && this.game.showToast) {
+            this.game.showToast('🌍 Entering Public Festive World (Room: UTSAV)...', 3000);
+        }
+        this.joinRoom('UTSAV');
+        // If not connected after 1.5s, host the public world so others can join!
+        setTimeout(() => {
+            if (!this.isConnected) {
+                this.hostRoomCustom('UTSAV', (code) => {
+                    try { localStorage.setItem('ganesh_active_room', code); } catch (err) {}
+                    if (this.game && this.game.showToast) {
+                        this.game.showToast('🌟 You are hosting the Public Festive World! Friends can join now!', 4000);
+                    }
+                });
+            }
+        }, 1200);
+    }
+
+    // Initialize Host Room
     hostRoom(onReady) {
         this.disconnect();
         this.isHost = true;
@@ -53,46 +122,61 @@ class MultiplayerManager {
         const peerId = `ganesh-craft-${this.roomCode}`;
 
         this.updateStatusUI('hosting', this.roomCode);
+        // Invoke onReady immediately so UI shows room code and copies link without waiting for slow cloud signaling
+        if (onReady) onReady(this.roomCode);
 
-        try {
-            this.peer = new Peer(peerId, {
-                debug: 1,
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:global.stun.twilio.com:3478' }
-                    ]
-                }
-            });
+        // 1. Setup BroadcastChannel for 0ms instant local / multi-tab connectivity
+        if (typeof BroadcastChannel !== 'undefined') {
+            try {
+                this.bc = new BroadcastChannel('ganesh_craft_room_' + this.roomCode);
+                this.bc.onmessage = (e) => this.handleIncomingData(e.data);
+            } catch (err) {
+                console.warn('BroadcastChannel notice:', err);
+            }
+        }
 
-            this.peer.on('open', (id) => {
-                console.log('Host Peer opened with ID:', id);
+        // 2. Setup WebRTC PeerJS for cross-device internet connectivity
+        if (typeof Peer !== 'undefined') {
+            try {
+                this.peer = new Peer(peerId, {
+                    debug: 1,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ]
+                    }
+                });
+
+                this.peer.on('open', (id) => {
+                    console.log('Host Peer opened with ID:', id);
+                    this.updateStatusUI('waiting', this.roomCode);
+                });
+
+                this.peer.on('connection', (conn) => {
+                    console.log('Incoming WebRTC peer connection received!');
+                    this.setupConnection(conn, 'Friend');
+                });
+
+                this.peer.on('error', (err) => {
+                    console.warn('PeerJS Host notice:', err);
+                    if (err.type === 'unavailable-id') {
+                        this.hostRoom(onReady);
+                    } else {
+                        // Keep broadcast channel alive even if cloud signaling times out
+                        this.updateStatusUI('waiting', this.roomCode);
+                    }
+                });
+            } catch (err) {
+                console.warn('PeerJS fallback to BroadcastChannel:', err);
                 this.updateStatusUI('waiting', this.roomCode);
-                if (onReady) onReady(this.roomCode);
-            });
-
-            this.peer.on('connection', (conn) => {
-                console.log('Friend incoming connection received!');
-                this.setupConnection(conn, 'Friend');
-            });
-
-            this.peer.on('error', (err) => {
-                console.error('PeerJS Host Error:', err);
-                if (err.type === 'unavailable-id') {
-                    // Regenerate code if already taken
-                    this.hostRoom(onReady);
-                } else {
-                    this.game.showToast(`Multiplayer error: ${err.message || 'Connection failed'}`, 4000);
-                    this.updateStatusUI('disconnected');
-                }
-            });
-        } catch (err) {
-            console.error('PeerJS failed to initialize:', err);
-            this.game.showToast('Multiplayer service unavailable offline.', 3000);
+            }
+        } else {
+            this.updateStatusUI('waiting', this.roomCode);
         }
     }
 
-    // Join a Host by Room Code
+    // Join Room by Code
     joinRoom(code) {
         if (!code) return;
         this.disconnect();
@@ -102,33 +186,63 @@ class MultiplayerManager {
 
         this.updateStatusUI('joining', this.roomCode);
 
-        try {
-            this.peer = new Peer({
-                debug: 1,
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:global.stun.twilio.com:3478' }
-                    ]
-                }
-            });
+        // 1. Connect via BroadcastChannel (instant for local / same network tabs)
+        if (typeof BroadcastChannel !== 'undefined') {
+            try {
+                this.bc = new BroadcastChannel('ganesh_craft_room_' + this.roomCode);
+                this.bc.onmessage = (e) => this.handleIncomingData(e.data);
 
-            this.peer.on('open', () => {
-                console.log('Client Peer opened, connecting to host:', hostPeerId);
-                const conn = this.peer.connect(hostPeerId, {
-                    reliable: true
+                // Ping host to establish connection
+                setTimeout(() => {
+                    if (this.bc) {
+                        this.bc.postMessage({
+                            type: 'join_request',
+                            senderId: this.myClientId,
+                            roomCode: this.roomCode
+                        });
+                    }
+                }, 150);
+            } catch (err) {
+                console.warn('BroadcastChannel join notice:', err);
+            }
+        }
+
+        // 2. Connect via PeerJS WebRTC (for cross-network / internet devices)
+        if (typeof Peer !== 'undefined') {
+            try {
+                this.peer = new Peer({
+                    debug: 1,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ]
+                    }
                 });
-                this.setupConnection(conn, 'Host');
-            });
 
-            this.peer.on('error', (err) => {
-                console.error('PeerJS Join Error:', err);
-                this.game.showToast(`Could not connect to room "${this.roomCode}". Verify code!`, 4500);
-                this.updateStatusUI('disconnected');
-            });
-        } catch (err) {
-            console.error('PeerJS failed to initialize:', err);
-            this.game.showToast('Multiplayer service unavailable offline.', 3000);
+                this.peer.on('open', () => {
+                    console.log('Client Peer opened, connecting to host:', hostPeerId);
+                    const conn = this.peer.connect(hostPeerId, {
+                        reliable: true
+                    });
+                    this.setupConnection(conn, 'Host');
+                });
+
+                this.peer.on('error', (err) => {
+                    console.warn('PeerJS Client notice:', err);
+                    if (!this.isConnected) {
+                        // Check if BroadcastChannel succeeded before showing error
+                        setTimeout(() => {
+                            if (!this.isConnected) {
+                                this.game.showToast(`Could not connect to room "${this.roomCode}". Verify room code!`, 4000);
+                                this.updateStatusUI('disconnected');
+                            }
+                        }, 1200);
+                    }
+                });
+            } catch (err) {
+                console.warn('PeerJS Client init fallback:', err);
+            }
         }
     }
 
@@ -137,21 +251,10 @@ class MultiplayerManager {
         this.conn = conn;
 
         conn.on('open', () => {
-            console.log('Connected to peer DataChannel!');
-            this.isConnected = true;
-            this.updateStatusUI('connected', this.roomCode, friendLabel);
-            this.game.showToast(`🎉 Connected with ${friendLabel}! You are playing together! 🐘`, 5000);
-
-            // Create 3D avatar in Three.js scene
-            this.createRemotePlayerAvatar(friendLabel);
-
-            // If Host, send current modified blocks so friend sees everything built so far
+            this.markConnected(friendLabel);
             if (this.isHost) {
                 this.sendInitialWorldState();
             }
-
-            // Start sending local position at 25 Hz
-            this.startPositionSync();
         });
 
         conn.on('data', (data) => {
@@ -159,11 +262,7 @@ class MultiplayerManager {
         });
 
         conn.on('close', () => {
-            console.log('Peer connection closed.');
-            this.game.showToast(`👋 ${friendLabel} left the game.`, 4000);
-            this.cleanupRemotePlayer();
-            this.isConnected = false;
-            this.updateStatusUI('disconnected');
+            this.handlePeerLeave(friendLabel);
         });
 
         conn.on('error', (err) => {
@@ -171,14 +270,71 @@ class MultiplayerManager {
         });
     }
 
-    // Handle incoming messages over DataChannel
+    markConnected(friendLabel = 'Friend') {
+        if (this.isConnected) return;
+        this.isConnected = true;
+        this.updateStatusUI('connected', this.roomCode, friendLabel);
+        this.game.showToast(`🎉 Connected with ${friendLabel}! You can now build and perform Aarti together! 🐘`, 5000);
+
+        this.createRemotePlayerAvatar(friendLabel);
+        this.startPositionSync();
+    }
+
+    handlePeerLeave(friendLabel = 'Friend') {
+        this.game.showToast(`👋 ${friendLabel} left the room.`, 3500);
+        this.cleanupRemotePlayer();
+        this.isConnected = false;
+        this.updateStatusUI('disconnected');
+    }
+
+    // Unified Send Data over all active transports (WebRTC + BroadcastChannel)
+    sendData(payload) {
+        payload.senderId = this.myClientId;
+
+        // Send via PeerJS WebRTC
+        if (this.conn && this.conn.open) {
+            try {
+                this.conn.send(payload);
+            } catch (e) {}
+        }
+
+        // Send via BroadcastChannel
+        if (this.bc) {
+            try {
+                this.bc.postMessage(payload);
+            } catch (e) {}
+        }
+    }
+
+    // Handle incoming messages over DataChannel & BroadcastChannel
     handleIncomingData(data) {
         if (!data || !data.type) return;
+        if (data.senderId && data.senderId === this.myClientId) return; // Prevent echo
 
         switch (data.type) {
+            case 'join_request':
+                // Someone joined our room via BroadcastChannel
+                if (this.isHost) {
+                    this.markConnected('Friend');
+                    this.sendInitialWorldState();
+                    this.sendData({
+                        type: 'join_ack',
+                        roomCode: this.roomCode
+                    });
+                }
+                break;
+
+            case 'join_ack':
+                // Received host ack via BroadcastChannel
+                this.markConnected('Host');
+                break;
+
             case 'pos':
                 // Update remote player target position & rotation
                 if (data.x !== undefined && data.y !== undefined && data.z !== undefined) {
+                    if (!this.remotePlayerMesh) {
+                        this.createRemotePlayerAvatar('Friend');
+                    }
                     this.remotePlayerTarget.pos.set(data.x, data.y, data.z);
                     this.remotePlayerTarget.yaw = data.yaw || 0;
                     this.remotePlayerTarget.pitch = data.pitch || 0;
@@ -190,6 +346,9 @@ class MultiplayerManager {
                 // Friend placed a block
                 if (this.game.voxelWorld) {
                     this.game.voxelWorld.placeBlock(data.x, data.y, data.z, data.blockType, false);
+                    if (this.game.levelManager) {
+                        this.game.levelManager.onBlockPlaced(data.blockType);
+                    }
                 }
                 break;
 
@@ -197,6 +356,9 @@ class MultiplayerManager {
                 // Friend broke a block
                 if (this.game.voxelWorld) {
                     this.game.voxelWorld.breakBlock(data.x, data.y, data.z);
+                    if (this.game.levelManager && data.blockType) {
+                        this.game.levelManager.onBlockBroken(data.blockType);
+                    }
                 }
                 break;
 
@@ -204,17 +366,26 @@ class MultiplayerManager {
                 // Friend performed Aarti pooja!
                 if (!this.game.isAartiActive) {
                     this.game.showToast('🌺 Your friend initiated Lord Ganesha Aarti Pooja! 🙏', 4000);
-                    this.game.performAartiCeremony();
+                    this.game.performAartiCeremony(false);
+                }
+                if (this.game.levelManager) {
+                    this.game.levelManager.onAartiPerformed();
                 }
                 break;
 
+            case 'restart':
+                // Friend restarted the world
+                this.game.showToast('🔄 The world was restarted by your friend!', 3500);
+                this.game.restartGame(false);
+                break;
+
             case 'world_sync':
-                // Client receives current modified blocks from Host
+                // Receive current placed blocks from Host
                 if (data.blocks && this.game.voxelWorld) {
                     data.blocks.forEach(b => {
                         this.game.voxelWorld.placeBlock(b.x, b.y, b.z, b.type, false);
                     });
-                    this.game.showToast('✨ World synchronized with Host!', 3000);
+                    this.game.showToast('✨ Shared world synchronized with Host!', 3000);
                 }
                 break;
         }
@@ -224,14 +395,14 @@ class MultiplayerManager {
     startPositionSync() {
         if (this.syncInterval) clearInterval(this.syncInterval);
         this.syncInterval = setInterval(() => {
-            if (!this.isConnected || !this.conn || !this.game.player) return;
+            if (!this.isConnected || !this.game.player) return;
 
             const pos = this.game.player.position;
             const yaw = this.game.player.yaw;
             const pitch = this.game.player.pitch;
             const isMoving = this.game.player.velocity.lengthSq() > 0.05;
 
-            this.conn.send({
+            this.sendData({
                 type: 'pos',
                 x: Number(pos.x.toFixed(2)),
                 y: Number(pos.y.toFixed(2)),
@@ -245,8 +416,8 @@ class MultiplayerManager {
 
     // Broadcast block placement
     broadcastPlaceBlock(x, y, z, blockType) {
-        if (this.isConnected && this.conn) {
-            this.conn.send({
+        if (this.isConnected) {
+            this.sendData({
                 type: 'place',
                 x, y, z,
                 blockType
@@ -256,8 +427,8 @@ class MultiplayerManager {
 
     // Broadcast block break
     broadcastBreakBlock(x, y, z) {
-        if (this.isConnected && this.conn) {
-            this.conn.send({
+        if (this.isConnected) {
+            this.sendData({
                 type: 'break',
                 x, y, z
             });
@@ -266,19 +437,29 @@ class MultiplayerManager {
 
     // Broadcast Aarti ceremony
     broadcastAarti() {
-        if (this.isConnected && this.conn) {
-            this.conn.send({
+        if (this.isConnected) {
+            this.sendData({
                 type: 'aarti'
             });
         }
     }
 
-    // Host sends non-default placed blocks to client
+    // Broadcast world restart
+    broadcastRestart() {
+        if (this.isConnected) {
+            this.sendData({
+                type: 'restart'
+            });
+        }
+    }
+
+    // Host sends placed building blocks to client
     sendInitialWorldState() {
-        if (!this.game.voxelWorld || !this.conn) return;
+        if (!this.game.voxelWorld) return;
         const placedList = [];
         for (const [key, block] of this.game.voxelWorld.blocks) {
-            if (block.type !== 'grass' && block.type !== 'water') {
+            // Send architectural & sacred blocks placed
+            if (block.type !== 'grass' && block.type !== 'water' && block.type !== 'dirt' && block.type !== 'stone') {
                 placedList.push({
                     x: block.x,
                     y: block.y,
@@ -288,7 +469,7 @@ class MultiplayerManager {
             }
         }
         if (placedList.length > 0) {
-            this.conn.send({
+            this.sendData({
                 type: 'world_sync',
                 blocks: placedList
             });
@@ -302,46 +483,53 @@ class MultiplayerManager {
         const group = new THREE.Group();
         group.position.copy(this.remotePlayerTarget.pos);
 
-        // Sleek Minecraft Voxel Gamer Bot (Zero human/people elements)
-        const diamondMat = new THREE.MeshStandardMaterial({ color: 0x00E5FF, roughness: 0.3, metalness: 0.6 });
-        const goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, roughness: 0.3, metalness: 0.7 });
-        const darkArmorMat = new THREE.MeshStandardMaterial({ color: 0x263238, roughness: 0.5 });
-        const eyeMat = new THREE.MeshBasicMaterial({ color: 0x76FF03 });
+        // Materials for Avatar
+        const saffronMat = new THREE.MeshStandardMaterial({ color: 0xFF6D00, roughness: 0.5 });
+        const goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.7, roughness: 0.3 });
+        const skinMat = new THREE.MeshStandardMaterial({ color: 0xDDA15E, roughness: 0.6 });
+        const darkArmorMat = new THREE.MeshStandardMaterial({ color: 0x9D0208, roughness: 0.5 });
 
-        // Head (0.4 x 0.4 x 0.4)
-        const headGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-        const head = new THREE.Mesh(headGeo, darkArmorMat);
-        head.position.y = 1.6;
+        // Head with Traditional Turban
+        const headGeo = new THREE.BoxGeometry(0.48, 0.48, 0.48);
+        const head = new THREE.Mesh(headGeo, skinMat);
+        head.position.y = 1.48;
         head.castShadow = true;
         group.add(head);
 
-        // Glowing visor
-        const visorGeo = new THREE.BoxGeometry(0.32, 0.08, 0.42);
-        const visor = new THREE.Mesh(visorGeo, eyeMat);
-        visor.position.y = 0.02;
-        head.add(visor);
+        // Auspicious Saffron Turban on Head
+        const turbanGeo = new THREE.BoxGeometry(0.56, 0.22, 0.56);
+        const turban = new THREE.Mesh(turbanGeo, saffronMat);
+        turban.position.y = 1.76;
+        turban.castShadow = true;
+        group.add(turban);
 
-        // Torso (0.5 x 0.65 x 0.3)
-        const bodyGeo = new THREE.BoxGeometry(0.5, 0.65, 0.3);
-        const body = new THREE.Mesh(bodyGeo, diamondMat);
-        body.position.y = 1.05;
+        // Golden Jewel on Turban
+        const jewelGeo = new THREE.BoxGeometry(0.12, 0.12, 0.08);
+        const jewel = new THREE.Mesh(jewelGeo, goldMat);
+        jewel.position.set(0, 1.76, 0.28);
+        group.add(jewel);
+
+        // Body / Torso (Kurta)
+        const bodyGeo = new THREE.BoxGeometry(0.52, 0.68, 0.28);
+        const body = new THREE.Mesh(bodyGeo, saffronMat);
+        body.position.y = 0.95;
         body.castShadow = true;
         group.add(body);
 
         // Arms
-        const armGeo = new THREE.BoxGeometry(0.18, 0.6, 0.18);
-        const leftArm = new THREE.Mesh(armGeo, goldMat);
-        leftArm.position.set(-0.35, 1.05, 0);
+        const armGeo = new THREE.BoxGeometry(0.18, 0.65, 0.18);
+        const leftArm = new THREE.Mesh(armGeo, saffronMat);
+        leftArm.position.set(-0.36, 0.95, 0);
         leftArm.castShadow = true;
         group.add(leftArm);
 
-        const rightArm = new THREE.Mesh(armGeo, goldMat);
-        rightArm.position.set(0.35, 1.05, 0);
+        const rightArm = new THREE.Mesh(armGeo, saffronMat);
+        rightArm.position.set(0.36, 0.95, 0);
         rightArm.castShadow = true;
         group.add(rightArm);
 
         // Legs
-        const legGeo = new THREE.BoxGeometry(0.2, 0.7, 0.22);
+        const legGeo = new THREE.BoxGeometry(0.22, 0.68, 0.22);
         const leftLeg = new THREE.Mesh(legGeo, darkArmorMat);
         leftLeg.position.set(-0.14, 0.35, 0);
         leftLeg.castShadow = true;
@@ -352,7 +540,7 @@ class MultiplayerManager {
         rightLeg.castShadow = true;
         group.add(rightLeg);
 
-        // 3D Canvas Floating Nametag Billboard
+        // 3D Floating Nametag
         const canvas = document.createElement('canvas');
         canvas.width = 256;
         canvas.height = 64;
@@ -398,35 +586,29 @@ class MultiplayerManager {
         const target = this.remotePlayerTarget;
 
         // Smooth position LERP
-        group.position.lerp(target.pos, Math.min(1.0, delta * 15));
+        group.position.lerp(target.pos, Math.min(delta * 12.0, 1.0));
 
-        // Smooth rotation LERP
-        const curY = group.rotation.y;
-        let diff = target.yaw - curY;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        group.rotation.y += diff * Math.min(1.0, delta * 15);
+        // Smooth yaw rotation
+        group.rotation.y = target.yaw;
 
-        // Animate walking limbs
+        // Walking limb animation
         if (target.isMoving) {
-            this.limbSwing += delta * 10;
-            const swing = Math.sin(this.limbSwing) * 0.6;
-            this.remotePlayerMesh.leftLeg.rotation.x = swing;
-            this.remotePlayerMesh.rightLeg.rotation.x = -swing;
-            this.remotePlayerMesh.leftArm.rotation.x = -swing;
-            this.remotePlayerMesh.rightArm.rotation.x = swing;
+            this.limbSwing += delta * 9.0;
+            const swing = Math.sin(this.limbSwing) * 0.45;
+            this.remotePlayerMesh.leftArm.rotation.x = swing;
+            this.remotePlayerMesh.rightArm.rotation.x = -swing;
+            this.remotePlayerMesh.leftLeg.rotation.x = -swing;
+            this.remotePlayerMesh.rightLeg.rotation.x = swing;
         } else {
-            // Idle return to rest
-            this.remotePlayerMesh.leftLeg.rotation.x *= 0.8;
-            this.remotePlayerMesh.rightLeg.rotation.x *= 0.8;
             this.remotePlayerMesh.leftArm.rotation.x *= 0.8;
             this.remotePlayerMesh.rightArm.rotation.x *= 0.8;
+            this.remotePlayerMesh.leftLeg.rotation.x *= 0.8;
+            this.remotePlayerMesh.rightLeg.rotation.x *= 0.8;
         }
     }
 
-    // Clean up avatar when disconnected
     cleanupRemotePlayer() {
-        if (this.remotePlayerMesh && this.remotePlayerMesh.group) {
+        if (this.remotePlayerMesh) {
             this.game.scene.remove(this.remotePlayerMesh.group);
             this.remotePlayerMesh = null;
         }
@@ -436,6 +618,10 @@ class MultiplayerManager {
         if (this.syncInterval) {
             clearInterval(this.syncInterval);
             this.syncInterval = null;
+        }
+        if (this.bc) {
+            try { this.bc.close(); } catch (e) {}
+            this.bc = null;
         }
         if (this.conn) {
             try { this.conn.close(); } catch (e) {}
@@ -492,3 +678,5 @@ class MultiplayerManager {
         }
     }
 }
+
+window.MultiplayerManager = MultiplayerManager;

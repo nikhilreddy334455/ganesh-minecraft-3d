@@ -34,6 +34,18 @@
             <span id="mp-status-badge" class="mp-badge" style="display: none;"></span>
         </div>
         <div class="hud-actions">
+            <button id="btn-companion" class="hud-btn hud-btn-companion" title="Talk & Play with Lord Ganesha (G)">
+                🐘 Ganesha (G)
+            </button>
+            <button id="btn-lift-ganesha" class="hud-btn hud-btn-lift" title="Lift or Drop Lord Ganesha (F)">
+                🤲 Lift (F)
+            </button>
+            <button id="btn-levels" class="hud-btn hud-btn-levels" title="View Festival Campaign Levels (L)">
+                🏆 Levels (L)
+            </button>
+            <button id="btn-restart" class="hud-btn hud-btn-restart" title="Restart Game & Reset World (R)">
+                🔄 Restart (R)
+            </button>
             <button id="btn-multiplayer" class="hud-btn hud-btn-multiplayer" title="Play with friends using a room code (M)">
                 👥 Friends (M)
             </button>
@@ -55,6 +67,12 @@
         </div>
     </div>
 
+    <!-- Floating Level Objective HUD Widget -->
+    <div id="level-hud"></div>
+
+    <!-- Floating Lord Ganesha Companion Task HUD Widget -->
+    <div id="companion-task-hud" style="display: none;"></div>
+
     <!-- Mobile Virtual Touch Controls (D-Pad & Action Buttons) -->
     <div id="mobile-controls">
         <div id="touch-dpad">
@@ -69,11 +87,15 @@
 
         <div id="touch-actions">
             <div class="touch-action-row">
+                <button id="btn-touch-companion" class="touch-btn touch-btn-companion" title="Talk to Ganesha">🐘 Ganesha</button>
+                <button id="btn-touch-levels" class="touch-btn touch-btn-levels" title="Levels">🏆 Levels</button>
+                <button id="btn-touch-restart" class="touch-btn touch-btn-restart" title="Restart Game">🔄 Reset</button>
                 <button id="btn-touch-palette" class="touch-btn" title="Blocks Palette">🎒 Blocks</button>
                 <button id="btn-touch-multiplayer" class="touch-btn touch-btn-multiplayer" title="Play with Friends">👥 Friends</button>
                 <button id="btn-touch-aarti" class="touch-btn touch-btn-aarti" title="Perform Aarti">🪔 Aarti</button>
             </div>
             <div class="touch-action-row">
+                <button id="btn-touch-lift" class="touch-btn touch-btn-lift" title="Lift or Drop Lord Ganesha">🤲 Lift</button>
                 <button id="btn-touch-break" class="touch-btn touch-btn-break" title="Break Block">⛏️ Break</button>
                 <button id="btn-touch-place" class="touch-btn touch-btn-place" title="Place Block">🧱 Place</button>
             </div>
@@ -118,6 +140,18 @@
                     <span>Perform Aarti (or 🪔 Aarti Button)</span>
                 </div>
                 <div class="control-item">
+                    <span class="key-badge">F</span>
+                    <span>Lift & Drop Ganesha (or 🤲 Lift Button)</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">L</span>
+                    <span>View Campaign Levels Hub</span>
+                </div>
+                <div class="control-item">
+                    <span class="key-badge">R</span>
+                    <span>Restart World & Sanctum</span>
+                </div>
+                <div class="control-item">
                     <span class="key-badge">1 – 8 / TAP</span>
                     <span>Select Hotbar Item</span>
                 </div>
@@ -135,6 +169,14 @@
             <button id="btn-start-game" class="hud-btn hud-btn-primary" style="margin: 16px auto 0 auto; font-size: 16px; padding: 12px 32px; border-radius: 25px; box-shadow: 0 4px 20px rgba(255, 183, 3, 0.4); cursor: pointer;">
                 🚩 ENTER SANCTUM & START PLAYING
             </button>
+            <div style="margin-top: 12px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                <button id="btn-modal-multiplayer" class="hud-btn hud-btn-multiplayer" style="font-size: 13px; padding: 8px 20px; border-radius: 20px; cursor: pointer;">
+                    👥 Play with Friends (M)
+                </button>
+                <button id="btn-modal-restart" class="hud-btn hud-btn-restart" style="font-size: 13px; padding: 8px 20px; border-radius: 20px; cursor: pointer;">
+                    🔄 Restart & Reload Levels (R)
+                </button>
+            </div>
         </div>
     </div>
 
@@ -156,17 +198,26 @@
     <div id="multiplayer-modal" class="modal-overlay" style="display: none;">
         <div class="mp-card">
             <div class="mp-header">
-                <h2>👥 MULTIPLAYER ROOMS</h2>
+                <h2>👥 MULTIPLAYER & CO-OP ACCESS</h2>
                 <button id="btn-close-multiplayer" class="modal-close-btn" title="Close Modal">✕</button>
             </div>
-            <p class="mp-sub">Play with your friend in the same 3D Ganesh world using a simple room code!</p>
+            <p class="mp-sub">Play together with your friends in the same 3D Ganesh world in real-time!</p>
 
             <div class="mp-sections">
-                <!-- Section 1: Host Room -->
+                <!-- Section 0: Instant 1-Click Public World Access -->
+                <div class="mp-section" style="border: 2px solid #00B4D8; background: rgba(0, 180, 216, 0.12);">
+                    <h3 style="color: #90E0EF;">🌐 1-Click Instant Public World</h3>
+                    <p class="mp-section-desc">Jump straight into the shared festive world with friends without needing any room code!</p>
+                    <button id="btn-mp-public" class="mp-btn" style="background: linear-gradient(135deg, #00B4D8, #0077B6); color: #FFF; font-weight: 800; font-size: 14px; width: 100%;">
+                        🌍 Play Together Online (Instant Access)
+                    </button>
+                </div>
+
+                <!-- Section 1: Host Private Room -->
                 <div class="mp-section">
-                    <h3>👑 Host a Game</h3>
-                    <p class="mp-section-desc">Create a room code and share it with your friend.</p>
-                    <button id="btn-mp-host" class="mp-btn mp-btn-primary">🎮 Create Room Code</button>
+                    <h3>👑 Host Private Room</h3>
+                    <p class="mp-section-desc">Create your own private room code and invite friends.</p>
+                    <button id="btn-mp-host" class="mp-btn mp-btn-primary">🎮 Create Private Room Code</button>
                     
                     <div id="mp-host-waiting" style="display: none;" class="mp-box">
                         <div class="mp-code-label">YOUR ROOM CODE</div>
@@ -178,19 +229,78 @@
                             <input id="mp-share-link" type="text" readonly value="" placeholder="Generating direct link..." />
                             <button id="btn-copy-link" class="mp-copy-btn" title="Copy Direct Invite Link">🔗 Copy Link</button>
                         </div>
-                        <p class="mp-pulse-text">📡 Tell your friend to join using this code!</p>
+                        <p class="mp-pulse-text">📡 Tell your friend to join using this code or direct link!</p>
                     </div>
                 </div>
 
                 <!-- Section 2: Join Room -->
                 <div class="mp-section">
-                    <h3>🚀 Join a Friend</h3>
+                    <h3>🚀 Join Friend's Room</h3>
                     <p class="mp-section-desc">Enter the room code given by your friend.</p>
                     <div class="mp-join-row">
                         <input id="mp-join-input" type="text" maxlength="8" placeholder="e.g. 7K9X2" autocomplete="off" spellcheck="false" />
                         <button id="btn-mp-join" class="mp-btn mp-btn-secondary">Join Game</button>
                     </div>
+                    <button id="btn-mp-quick-join" class="mp-btn" style="width: 100%; margin-top: 8px; background: rgba(255, 215, 0, 0.18); border: 1.5px solid #FFD700; color: #FFF; font-size: 13px; font-weight: 700; cursor: pointer;">
+                        ⚡ Instant Join Active Room (Same PC / Tabs)
+                    </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Levels Overview & Selection Modal -->
+    <div id="levels-modal" class="modal-overlay" style="display: none;">
+        <div class="levels-card">
+            <div class="levels-header">
+                <div class="levels-title-group">
+                    <h2>🏆 FESTIVAL CAMPAIGN LEVELS</h2>
+                    <p class="levels-sub">Progress through sacred stages of Ganesh Utsav from altar consecration to grand Visarjan!</p>
+                </div>
+                <button id="btn-close-levels" class="modal-close-btn" title="Close Levels Modal">✕</button>
+            </div>
+            <div id="levels-list-grid" class="levels-grid">
+                <!-- Dynamically populated by LevelManager -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Complete Celebration Modal -->
+    <div id="level-complete-modal" class="modal-overlay" style="display: none;">
+        <div class="celebration-card">
+            <div class="celebration-burst">✨ 🪔 🌺 🪔 ✨</div>
+            <div id="complete-level-icon" class="celebration-icon">🐘</div>
+            <h2 id="complete-level-title" class="celebration-title">LEVEL MASTERED!</h2>
+            <p id="complete-level-desc" class="celebration-desc">You have successfully completed this sacred festival milestone!</p>
+            <div class="celebration-reward-pill">
+                <span class="reward-title">BLESSED REWARD</span>
+                <span id="complete-level-reward" class="reward-amount">+150 Sacred Blessings</span>
+            </div>
+            <div class="celebration-actions">
+                <button id="btn-complete-next-level" class="hud-btn hud-btn-primary celebration-btn">
+                    Advance to Next Level ➡️
+                </button>
+                <button id="btn-close-complete-modal" class="hud-btn celebration-btn-secondary">
+                    Stay in Sanctum
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lord Ganesha Companion & Task Modal -->
+    <div id="ganesha-dialog-modal" class="modal-overlay" style="display: none;">
+        <div class="ganesha-dialog-card">
+            <div class="ganesha-dialog-header">
+                <div class="ganesha-avatar-circle">🐘</div>
+                <div class="ganesha-header-text">
+                    <h2 id="ganesha-dialog-title">Lord Ganesha</h2>
+                    <span class="ganesha-header-subtitle">Standing Divine Character & Playful Companion</span>
+                </div>
+                <button id="btn-close-ganesha-dialog" class="modal-close-btn" title="Close Dialog">✕</button>
+            </div>
+            <div class="ganesha-dialog-body">
+                <div id="ganesha-dialog-text" class="ganesha-speech-bubble"></div>
+                <div id="ganesha-dialog-options" class="ganesha-options-grid"></div>
             </div>
         </div>
     </div>
@@ -199,13 +309,15 @@
     <div id="game-toast"></div>
 
     <!-- Engine Scripts -->
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="js/peerjs.min.js?v=7.0_clean"></script>
     <script src="js/three.min.js?v=7.0_clean"></script>
     <script src="js/audio.js?v=7.0_clean"></script>
     <script src="js/ganesha.js?v=7.0_clean"></script>
     <script src="js/voxel.js?v=7.0_clean"></script>
     <script src="js/multiplayer.js?v=7.0_clean"></script>
     <script src="js/player.js?v=7.0_clean"></script>
+    <script src="js/levels.js?v=7.0_clean"></script>
+    <script src="js/companion.js?v=7.0_clean"></script>
     <script src="js/game.js?v=7.0_clean"></script>
 </body>
 </html>

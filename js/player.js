@@ -109,9 +109,13 @@ class PlayerController {
             if (!this.hasEnteredGame) {
                 requestLock();
             } else if (!this.isLocked) {
-                try {
-                    this.domElement.requestPointerLock();
-                } catch (e) {}
+                const modals = document.querySelectorAll('.modal-overlay');
+                const anyModalOpen = Array.from(modals).some(m => m.style.display && m.style.display !== 'none');
+                if (!anyModalOpen) {
+                    try {
+                        this.domElement.requestPointerLock();
+                    } catch (e) {}
+                }
             }
         });
 
@@ -143,6 +147,11 @@ class PlayerController {
         });
 
         document.addEventListener('mousemove', (e) => {
+            // Never rotate camera or intercept mouse when any UI modal or blocker is open
+            const modals = document.querySelectorAll('.modal-overlay, #palette-modal');
+            const anyModalOpen = Array.from(modals).some(m => m.style.display && m.style.display !== 'none');
+            if (anyModalOpen) return;
+
             let movementX = 0;
             let movementY = 0;
 
@@ -510,6 +519,17 @@ class PlayerController {
         this.moveWithCollision(delta);
 
         // Update Camera position
+        this.camera.position.copy(this.position);
+    }
+
+    resetPosition(x = 0, y = 2.25, z = 7) {
+        this.position.set(x, y, z);
+        this.velocity.set(0, 0, 0);
+        this.pitch = 0;
+        this.yaw = 0;
+        this.isGrounded = true;
+        this.isJumping = false;
+        this.jumpHoldTimer = 0;
         this.camera.position.copy(this.position);
     }
 
