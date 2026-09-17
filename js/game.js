@@ -724,8 +724,8 @@ class GaneshMinecraftGame {
         // Resize & Orientation Listener (safeguarded per nik1 & mobile landscape)
         const updateViewDimensions = () => {
             if (!this.camera || !this.renderer) return;
-            const w = window.innerWidth;
-            const h = window.innerHeight;
+            const w = Math.max(1, window.innerWidth || (window.screen && window.screen.width) || 1);
+            const h = Math.max(1, window.innerHeight || (window.screen && window.screen.height) || 1);
             this.camera.aspect = w / h;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(w, h);
@@ -736,12 +736,14 @@ class GaneshMinecraftGame {
             updateViewDimensions();
             setTimeout(updateViewDimensions, 100);
             setTimeout(updateViewDimensions, 300);
+            setTimeout(updateViewDimensions, 600);
         });
         if (screen.orientation) {
             screen.orientation.addEventListener('change', () => {
                 updateViewDimensions();
                 setTimeout(updateViewDimensions, 100);
                 setTimeout(updateViewDimensions, 300);
+                setTimeout(updateViewDimensions, 600);
             });
         }
 

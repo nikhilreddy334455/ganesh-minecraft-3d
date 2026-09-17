@@ -73,11 +73,6 @@ class PlayerController {
 
         const requestLandscapeOrientation = () => {
             try {
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(() => {});
-                }
-            } catch (e) {}
-            try {
                 if (document.documentElement.requestFullscreen) {
                     document.documentElement.requestFullscreen().catch(() => {});
                 } else if (document.documentElement.webkitRequestFullscreen) {
@@ -96,26 +91,23 @@ class PlayerController {
 
         const btnReqLandscape = document.getElementById('btn-request-landscape');
         if (btnReqLandscape) {
-            btnReqLandscape.addEventListener('click', (e) => {
-                e.stopPropagation();
+            const handleReqLandscape = (e) => {
+                if (e) e.stopPropagation();
                 requestLandscapeOrientation();
-            });
-            btnReqLandscape.addEventListener('touchend', (e) => {
-                e.stopPropagation();
-                requestLandscapeOrientation();
-            });
+                document.body.classList.add('portrait-dismissed');
+            };
+            btnReqLandscape.addEventListener('click', handleReqLandscape);
+            btnReqLandscape.addEventListener('touchend', handleReqLandscape);
         }
 
         const btnDismissRotate = document.getElementById('btn-dismiss-rotate');
         if (btnDismissRotate) {
-            btnDismissRotate.addEventListener('click', (e) => {
-                e.stopPropagation();
+            const handleDismissRotate = (e) => {
+                if (e) e.stopPropagation();
                 document.body.classList.add('portrait-dismissed');
-            });
-            btnDismissRotate.addEventListener('touchend', (e) => {
-                e.stopPropagation();
-                document.body.classList.add('portrait-dismissed');
-            });
+            };
+            btnDismissRotate.addEventListener('click', handleDismissRotate);
+            btnDismissRotate.addEventListener('touchend', handleDismissRotate);
         }
 
         // Click or tap to enter
@@ -197,12 +189,24 @@ class PlayerController {
         window.addEventListener('mouseup', () => {
             isMouseDown = false;
         });
+        window.addEventListener('blur', () => {
+            isMouseDown = false;
+        });
+
+        const isAnyModalOpen = () => {
+            const modals = document.querySelectorAll('.modal-overlay, #palette-modal, #mobile-menu-modal, #levels-modal, #multiplayer-modal');
+            for (let i = 0; i < modals.length; i++) {
+                const m = modals[i];
+                if (m.style.display && m.style.display !== 'none') {
+                    return true;
+                }
+            }
+            return false;
+        };
 
         document.addEventListener('mousemove', (e) => {
-            // Never rotate camera or intercept mouse when any UI modal or blocker is open
-            const modals = document.querySelectorAll('.modal-overlay, #palette-modal');
-            const anyModalOpen = Array.from(modals).some(m => m.style.display && m.style.display !== 'none');
-            if (anyModalOpen) return;
+            // Never rotate camera or intercept mouse when any UI modal is open
+            if (isAnyModalOpen()) return;
 
             let movementX = 0;
             let movementY = 0;
@@ -223,8 +227,11 @@ class PlayerController {
             movementX = Math.max(-80, Math.min(80, movementX));
             movementY = Math.max(-80, Math.min(80, movementY));
 
-            this.yaw -= movementX * 0.0024;
-            this.pitch -= movementY * 0.0024;
+            if (Number.isFinite(movementX)) this.yaw -= movementX * 0.0024;
+            if (Number.isFinite(movementY)) this.pitch -= movementY * 0.0024;
+
+            if (!Number.isFinite(this.yaw)) this.yaw = 0;
+            if (!Number.isFinite(this.pitch)) this.pitch = 0;
 
             // Clamp pitch to prevent flipping
             this.pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, this.pitch));
@@ -418,27 +425,73 @@ class PlayerController {
             });
         }
 
-        // Touch swipe camera rotation on mobile screen (excluding HUD and buttons)
+        // Touch swipe camera rotation on mobile screen (with self-healing and zero freezing)
         let touchLookId = null;
         let lastTouchX = 0;
         let lastTouchY = 0;
         let touchStartTime = 0;
         let touchMoved = false;
 
-        window.addEventListener('touchstart', (e) => {
-            if (!this.hasEnteredGame) return;
-            const target = e.target;
-            if (target.closest('#mobile-controls') ||
-                target.closest('#top-hud') ||
-                target.closest('#hotbar-container') ||
-                target.closest('#instructions')) {
+        // Helper to determine if a touch target is an interactive UI control
+        const isInteractiveTouchTarget = (target) => {
+            if (!target || !target.closest) return false;
+            return !!(
+                target.closest('.dpad-btn') ||
+                target.closest('.touch-btn') ||
+                target.closest('.hud-btn') ||
+                target.closest('.hotbar-slot') ||
+                target.closest('.modal-card') ||
+                target.closest('#instructions') ||
+                target.closest('#mobile-menu-modal') ||
+                target.closest('#palette-modal') ||
+                target.closest('#levels-modal') ||
+                target.closest('#multiplayer-modal') ||
+                target.closest('button, a, input, select, textarea')
+            );
+        };
+
+        // Self-healing reset: clear touchLookId if that finger is no longer touching the glass
+        const resetTouchLookIfOrphaned = (activeTouches) => {
+            if (touchLookId === null) return;
+            if (!activeTouches || activeTouches.length === 0) {
+                touchLookId = null;
                 return;
             }
+            let found = false;
+            for (let i = 0; i < activeTouches.length; i++) {
+                if (activeTouches[i].identifier === touchLookId) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                touchLookId = null;
+            }
+        };
+
+        window.addEventListener('touchstart', (e) => {
+            if (!this.hasEnteredGame) return;
+
+            // Self-heal: clear any orphaned look touch identifier
+            resetTouchLookIfOrphaned(e.touches);
+
+            // Do not rotate camera if any modal overlay is active
+            const modals = document.querySelectorAll('.modal-overlay, #palette-modal, #mobile-menu-modal, #levels-modal, #multiplayer-modal');
+            const anyModalOpen = Array.from(modals).some(m => m.style.display && m.style.display !== 'none');
+            if (anyModalOpen) return;
 
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const t = e.changedTouches[i];
-                // Right half or middle of screen for look drag
-                if (touchLookId === null && t.clientX > window.innerWidth * 0.28) {
+                const target = t.target || e.target;
+
+                // Ignore touch if directly on an interactive button / hotbar / modal
+                if (isInteractiveTouchTarget(target)) continue;
+
+                // Ignore if touch is inside the D-Pad movement container
+                if (target.closest && target.closest('#touch-dpad')) continue;
+
+                // Claim this touch for camera rotation
+                if (touchLookId === null) {
                     touchLookId = t.identifier;
                     lastTouchX = t.clientX;
                     lastTouchY = t.clientY;
@@ -450,7 +503,27 @@ class PlayerController {
         }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
+            // Self-heal: ensure active touches are tracked
+            resetTouchLookIfOrphaned(e.touches);
+
+            // Dynamic recovery: if touchLookId was cleared or missed, pick up any active dragging finger not on a button
+            if (touchLookId === null && e.touches && e.touches.length > 0) {
+                for (let i = 0; i < e.touches.length; i++) {
+                    const t = e.touches[i];
+                    const target = t.target || e.target;
+                    if (!isInteractiveTouchTarget(target) && (!target.closest || !target.closest('#touch-dpad'))) {
+                        touchLookId = t.identifier;
+                        lastTouchX = t.clientX;
+                        lastTouchY = t.clientY;
+                        touchStartTime = Date.now();
+                        touchMoved = false;
+                        break;
+                    }
+                }
+            }
+
             if (touchLookId === null) return;
+
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const t = e.changedTouches[i];
                 if (t.identifier === touchLookId) {
@@ -459,37 +532,63 @@ class PlayerController {
                     lastTouchX = t.clientX;
                     lastTouchY = t.clientY;
 
-                    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                    // Clamp sudden outlier jumps (e.g. finger teleport / orientation switch)
+                    const clampedDx = Math.max(-100, Math.min(100, dx));
+                    const clampedDy = Math.max(-100, Math.min(100, dy));
+
+                    if (Math.abs(clampedDx) > 1 || Math.abs(clampedDy) > 1) {
                         touchMoved = true;
                     }
 
-                    // Mobile look rotation speed
-                    this.yaw -= dx * 0.004;
-                    this.pitch -= dy * 0.004;
+                    // Mobile look rotation speed (smooth, responsive, zero drift)
+                    if (Number.isFinite(clampedDx)) this.yaw -= clampedDx * 0.004;
+                    if (Number.isFinite(clampedDy)) this.pitch -= clampedDy * 0.004;
+
+                    // Ensure finite numbers at all times
+                    if (!Number.isFinite(this.yaw)) this.yaw = 0;
+                    if (!Number.isFinite(this.pitch)) this.pitch = 0;
+
                     this.pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, this.pitch));
-                    e.preventDefault();
+
+                    if (e.cancelable) {
+                        e.preventDefault();
+                    }
                     break;
                 }
             }
         }, { passive: false });
 
         const endTouchLook = (e) => {
-            if (touchLookId === null) return;
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const t = e.changedTouches[i];
-                if (t.identifier === touchLookId) {
-                    // Tap on screen to place block if not dragged
-                    if (!touchMoved && (Date.now() - touchStartTime < 250)) {
-                        if (window.game) window.game.handlePlaceBlock();
+            if (!e.touches || e.touches.length === 0) {
+                touchLookId = null;
+                return;
+            }
+
+            if (touchLookId !== null) {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const t = e.changedTouches[i];
+                    if (t.identifier === touchLookId) {
+                        // Tap on screen to place block if quick tap and didn't drag
+                        if (!touchMoved && (Date.now() - touchStartTime < 250)) {
+                            if (window.game) window.game.handlePlaceBlock();
+                        }
+                        touchLookId = null;
+                        break;
                     }
-                    touchLookId = null;
-                    break;
                 }
             }
+
+            // Always verify if touchLookId is still present in remaining touches
+            resetTouchLookIfOrphaned(e.touches);
         };
 
         window.addEventListener('touchend', endTouchLook, { passive: false });
         window.addEventListener('touchcancel', endTouchLook, { passive: false });
+
+        // Global safety resets on blur, visibility change, and orientation change
+        window.addEventListener('blur', () => { touchLookId = null; });
+        document.addEventListener('visibilitychange', () => { touchLookId = null; });
+        window.addEventListener('orientationchange', () => { touchLookId = null; });
     }
 
     resetKeys() {
@@ -500,6 +599,10 @@ class PlayerController {
 
     update(delta) {
         if (!delta || delta > 0.1) delta = 0.016; // Safeguard against large frame skips
+
+        // Guarantee yaw & pitch are valid finite numbers to prevent camera freezing
+        if (!Number.isFinite(this.yaw)) this.yaw = 0;
+        if (!Number.isFinite(this.pitch)) this.pitch = 0;
 
         // Update Camera rotation
         const euler = new THREE.Euler(0, 0, 0, 'YXZ');
