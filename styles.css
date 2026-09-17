@@ -300,6 +300,8 @@ body, html {
     text-align: center;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.2);
     cursor: pointer;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-close-btn {

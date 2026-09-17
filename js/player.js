@@ -71,29 +71,36 @@ class PlayerController {
             }
         };
 
-        // Click on blocker or instructions to enter
+        const enterGameAction = (e) => {
+            if (e) {
+                e.stopPropagation();
+            }
+            requestLock();
+        };
+
+        // Click or tap to enter
         if (blocker) {
-            blocker.addEventListener('click', () => requestLock());
+            blocker.addEventListener('click', (e) => {
+                if (e.target === blocker) enterGameAction(e);
+            });
+            blocker.addEventListener('touchend', (e) => {
+                if (e.target === blocker) enterGameAction(e);
+            });
         }
         if (instructions) {
             instructions.addEventListener('click', (e) => {
                 e.stopPropagation();
-                requestLock();
             });
         }
         const btnStart = document.getElementById('btn-start-game');
         if (btnStart) {
-            btnStart.addEventListener('click', (e) => {
-                e.stopPropagation();
-                requestLock();
-            });
+            btnStart.addEventListener('click', enterGameAction);
+            btnStart.addEventListener('touchend', enterGameAction);
         }
         const btnClose = document.getElementById('btn-close-modal');
         if (btnClose) {
-            btnClose.addEventListener('click', (e) => {
-                e.stopPropagation();
-                requestLock();
-            });
+            btnClose.addEventListener('click', enterGameAction);
+            btnClose.addEventListener('touchend', enterGameAction);
         }
         const btnHelp = document.getElementById('btn-help');
         if (btnHelp) {
@@ -116,6 +123,11 @@ class PlayerController {
                         this.domElement.requestPointerLock();
                     } catch (e) {}
                 }
+            }
+        });
+        this.domElement.addEventListener('touchstart', () => {
+            if (!this.hasEnteredGame) {
+                requestLock();
             }
         });
 
