@@ -719,6 +719,9 @@ class VoxelWorld {
             this.placeBlock(lx, ly + 1, lz, 'pillar');
             this.placeBlock(lx, ly + 2, lz, 'lantern');
         });
+
+        // Build Grand Ganesh Pandal with Lord Ganesha at the heart of the world on spawn
+        this.buildGrandPandal(0, 0, 0, false);
     }
 
     generateTerrain(size) {
