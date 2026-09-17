@@ -71,12 +71,52 @@ class PlayerController {
             }
         };
 
+        const requestLandscapeOrientation = () => {
+            try {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+            } catch (e) {}
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                }
+            } catch (e) {}
+        };
+
         const enterGameAction = (e) => {
             if (e) {
                 e.stopPropagation();
             }
+            requestLandscapeOrientation();
             requestLock();
         };
+
+        const btnReqLandscape = document.getElementById('btn-request-landscape');
+        if (btnReqLandscape) {
+            btnReqLandscape.addEventListener('click', (e) => {
+                e.stopPropagation();
+                requestLandscapeOrientation();
+            });
+            btnReqLandscape.addEventListener('touchend', (e) => {
+                e.stopPropagation();
+                requestLandscapeOrientation();
+            });
+        }
+
+        const btnDismissRotate = document.getElementById('btn-dismiss-rotate');
+        if (btnDismissRotate) {
+            btnDismissRotate.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.body.classList.add('portrait-dismissed');
+            });
+            btnDismissRotate.addEventListener('touchend', (e) => {
+                e.stopPropagation();
+                document.body.classList.add('portrait-dismissed');
+            });
+        }
 
         // Click or tap to enter
         if (blocker) {

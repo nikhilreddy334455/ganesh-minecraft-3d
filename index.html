@@ -14,6 +14,26 @@
     <link rel="stylesheet" href="styles.css?v=7.0_clean">
 </head>
 <body>
+    <!-- Landscape Orientation Prompt for Mobile Devices -->
+    <div id="rotate-device-overlay">
+        <div class="rotate-card">
+            <div class="rotate-icon-wrapper">
+                <div class="phone-icon-anim">📱</div>
+                <div class="rotate-arrow-anim">↻</div>
+            </div>
+            <h2>ROTATE YOUR PHONE</h2>
+            <p class="rotate-subtitle">Ganesh Pandal Craft 3D plays best in <strong>Horizontal (Landscape Mode)</strong> for wide-angle view and dual-thumb Minecraft controls.</p>
+            <div class="rotate-actions">
+                <button id="btn-request-landscape" class="hud-btn hud-btn-primary">
+                    🔄 Go Fullscreen / Landscape
+                </button>
+                <button id="btn-dismiss-rotate" class="hud-btn hud-btn-secondary">
+                    Play in Portrait Anyway
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 3D Canvas Target -->
     <div id="canvas-container"></div>
 

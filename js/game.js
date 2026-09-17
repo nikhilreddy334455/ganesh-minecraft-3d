@@ -593,12 +593,29 @@ class GaneshMinecraftGame {
     }
 
     initEvents() {
-        // Resize Listener (safeguarded per nik1)
-        window.addEventListener('resize', () => {
-            this.camera.aspect = window.innerWidth / window.innerHeight;
+        // Resize & Orientation Listener (safeguarded per nik1 & mobile landscape)
+        const updateViewDimensions = () => {
+            if (!this.camera || !this.renderer) return;
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            this.camera.aspect = w / h;
             this.camera.updateProjectionMatrix();
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setSize(w, h);
+        };
+
+        window.addEventListener('resize', updateViewDimensions);
+        window.addEventListener('orientationchange', () => {
+            updateViewDimensions();
+            setTimeout(updateViewDimensions, 100);
+            setTimeout(updateViewDimensions, 300);
         });
+        if (screen.orientation) {
+            screen.orientation.addEventListener('change', () => {
+                updateViewDimensions();
+                setTimeout(updateViewDimensions, 100);
+                setTimeout(updateViewDimensions, 300);
+            });
+        }
 
         // Mouse Controls: Left Click = Place, Right Click = Break
         window.addEventListener('mousedown', (e) => {

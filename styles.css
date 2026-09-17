@@ -542,49 +542,278 @@ body, html {
     border-color: #E5383B;
 }
 
-/* Mobile Responsive Layout for Phones */
+/* Landscape Orientation Prompt for Mobile Devices */
+#rotate-device-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(12, 10, 16, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 99999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Automatically show rotate prompt if held in portrait mode on mobile/tablet */
+@media screen and (orientation: portrait) and (max-width: 900px) {
+    body:not(.portrait-dismissed) #rotate-device-overlay {
+        display: flex;
+    }
+}
+
+.rotate-card {
+    background: linear-gradient(135deg, rgba(35, 20, 42, 0.96), rgba(52, 28, 20, 0.96));
+    border: 2px solid #FFD700;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.35), 0 20px 50px rgba(0, 0, 0, 0.9);
+    border-radius: 24px;
+    padding: 30px 24px;
+    max-width: 380px;
+    width: 90%;
+    animation: rotateCardIn 0.35s ease-out;
+}
+
+@keyframes rotateCardIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.rotate-icon-wrapper {
+    position: relative;
+    width: 90px;
+    height: 80px;
+    margin: 0 auto 16px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.phone-icon-anim {
+    font-size: 52px;
+    display: inline-block;
+    animation: phoneTiltAnim 2.2s infinite ease-in-out;
+}
+
+.rotate-arrow-anim {
+    position: absolute;
+    top: -2px;
+    right: 4px;
+    font-size: 26px;
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    animation: arrowRotateAnim 2.2s infinite linear;
+}
+
+@keyframes phoneTiltAnim {
+    0% { transform: rotate(0deg); }
+    35% { transform: rotate(-90deg); }
+    75% { transform: rotate(-90deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes arrowRotateAnim {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.rotate-card h2 {
+    font-family: 'Cinzel', serif;
+    color: #FFD700;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+}
+
+.rotate-subtitle {
+    color: #FFF3B0;
+    font-size: 13px;
+    line-height: 1.55;
+    margin-bottom: 22px;
+}
+
+.rotate-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hud-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 12px;
+    padding: 9px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hud-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #FFF;
+}
+
+/* Mobile Responsive Layout for Phones (General) */
 @media (max-width: 768px) {
-    #top-hud {
-        top: 6px;
-        left: 6px;
-        right: 6px;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 6px;
-    }
-
-    .hud-title-card {
-        padding: 6px 12px;
-        justify-content: space-between;
-    }
-
     .game-title {
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .blessings-badge {
+        font-size: 10.5px;
+        padding: 2px 6px;
+    }
+
+    .hud-btn {
+        padding: 4px 7px;
+        font-size: 10px;
+        border-radius: 6px;
+    }
+
+    #aarti-banner {
+        top: 60px;
+        font-size: 12px;
+        padding: 5px 14px;
+    }
+
+    #interact-prompt {
         font-size: 11px;
-        padding: 2px 7px;
+        padding: 5px 12px;
+    }
+
+    #game-toast {
+        bottom: 65px;
+        font-size: 11px;
+        padding: 5px 14px;
+    }
+}
+
+/* =========================================================
+   EXCLUSIVE HORIZONTAL / LANDSCAPE MODE OPTIMIZATION
+   ========================================================= */
+@media screen and (orientation: landscape) and (max-height: 560px), screen and (orientation: landscape) and (max-width: 1024px) {
+    /* Top HUD: Sleek Single Horizontal Row */
+    #top-hud {
+        top: 4px;
+        left: 8px;
+        right: 8px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+    }
+
+    .hud-title-card {
+        padding: 4px 8px;
+        gap: 6px;
+    }
+
+    .game-title {
+        font-size: 11.5px;
+    }
+
+    .blessings-badge {
+        font-size: 10px;
+        padding: 1px 6px;
     }
 
     .hud-actions {
         display: flex;
-        justify-content: center;
         gap: 4px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        align-items: center;
     }
 
     .hud-btn {
-        padding: 5px 8px;
-        font-size: 10.5px;
-        border-radius: 7px;
-        gap: 4px;
+        padding: 4px 7px;
+        font-size: 9.5px;
+        border-radius: 6px;
+        gap: 3px;
+        white-space: nowrap;
     }
 
-    #hotbar-container {
+    /* Mobile Controls: Dual-Thumb Minecraft Layout */
+    #mobile-controls {
+        display: flex !important;
+        position: absolute;
         bottom: 8px;
-        width: 100%;
-        padding: 0 4px;
+        left: 0;
+        right: 0;
+        padding: 0 12px;
+        justify-content: space-between;
+        align-items: flex-end;
+        pointer-events: none;
+        z-index: 30;
+    }
+
+    /* Left Thumb D-Pad */
+    #touch-dpad {
+        pointer-events: auto;
+        margin-bottom: 2px;
+        gap: 2px;
+    }
+
+    .dpad-middle {
+        gap: 2px;
+    }
+
+    .dpad-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    .dpad-center {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Right Thumb Action Cluster */
+    #touch-actions {
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
+        margin-bottom: 2px;
+    }
+
+    .touch-action-row {
+        display: flex;
+        gap: 5px;
+    }
+
+    .touch-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 9.5px;
+        border-radius: 50%;
+    }
+
+    .touch-btn-jump {
+        width: 52px;
+        height: 52px;
+        font-size: 11px;
+    }
+
+    /* Centered Hotbar in Landscape Mode */
+    #hotbar-container {
+        bottom: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        max-width: 420px;
+        padding: 0;
+        z-index: 25;
     }
 
     #hotbar {
@@ -592,23 +821,22 @@ body, html {
         gap: 3px;
         max-width: 100%;
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .hotbar-slot {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
         border-width: 2px;
     }
 
     .slot-icon {
-        font-size: 16px;
+        font-size: 14px;
         margin-top: 1px;
     }
 
     .slot-key {
-        font-size: 10px;
+        font-size: 8.5px;
         top: 0px;
         left: 2px;
     }
@@ -617,45 +845,50 @@ body, html {
         display: none;
     }
 
+    /* Instructions Modal In Horizontal Mode */
     #instructions {
-        padding: 20px 16px;
-        max-width: 94%;
-        max-height: 88vh;
+        padding: 14px 20px;
+        max-width: 86vw;
+        max-height: 90vh;
         overflow-y: auto;
     }
 
     #instructions h1 {
-        font-size: 20px;
+        font-size: 18px;
+        margin-bottom: 4px;
     }
 
     #instructions p.subtitle {
-        font-size: 12.5px;
-        margin-bottom: 14px;
+        font-size: 11px;
+        margin-bottom: 8px;
     }
 
     .controls-grid {
-        grid-template-columns: 1fr;
-        gap: 6px;
-        padding: 10px;
-        font-size: 11.5px;
-        margin-bottom: 14px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        padding: 6px;
+        font-size: 9.5px;
+        margin-bottom: 8px;
     }
 
-    #aarti-banner {
-        top: 85px;
-        font-size: 13px;
-        padding: 6px 16px;
+    .control-item {
+        padding: 2px 4px;
     }
 
-    #interact-prompt {
-        font-size: 12px;
-        padding: 6px 14px;
+    .key-badge {
+        font-size: 8.5px;
+        padding: 1px 4px;
     }
 
-    #game-toast {
-        bottom: 75px;
-        font-size: 12px;
-        padding: 6px 16px;
+    .play-prompt {
+        font-size: 10.5px;
+        margin-top: 4px;
+    }
+
+    #btn-start-game {
+        font-size: 13px !important;
+        padding: 8px 22px !important;
+        margin-top: 8px !important;
     }
 }
 
